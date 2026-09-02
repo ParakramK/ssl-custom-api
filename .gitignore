@@ -66,3 +66,6 @@ Temporary Items
 # iCloud generated files
 *.icloud
 
+*.env
+!.env.example
+bin/*
