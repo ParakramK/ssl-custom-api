@@ -6,7 +6,8 @@ import (
 
 	"ssl-custom-api/internal/config"
 	"ssl-custom-api/internal/providers/hana"
-	"ssl-custom-api/internal/sap/aging"
+
+	"ssl-custom-api/internal/sap/customer"
 )
 
 func main() {
@@ -28,11 +29,11 @@ func main() {
 
 	log.Println("HANA provider initialized")
 
-	repository := aging.NewRepository(hanaProvider)
-	service := aging.NewService(repository)
-	handler := aging.NewHandler(service)
+	repository := customer.NewRepository(hanaProvider)
+	service := customer.NewService(repository)
+	handler := customer.NewHandler(service)
 
-	http.HandleFunc("/api/aging", handler.GetCustomerAging)
+	http.HandleFunc("/api/customer/aging", handler.GetCustomerAging)
 
 	log.Println("API listening on :8080")
 

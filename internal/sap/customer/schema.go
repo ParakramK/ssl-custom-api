@@ -1,35 +1,6 @@
-package aging
+package customer
 
-import (
-	"math/big"
-	"time"
-
-	"github.com/SAP/go-hdb/driver"
-)
-
-func decimalToFloat64(d driver.Decimal) float64 {
-	rat := (*big.Rat)(&d)
-
-	value, _ := rat.Float64()
-
-	return value
-}
-
-type AgingDetail struct {
-	InvoiceNumber     int        `json:"InvoiceNumber"`
-	InvoiceDate       *time.Time `json:"InvoiceDate"`
-	InvoiceAmount     float64    `json:"InvoiceAmount"`
-	DueDate           *time.Time `json:"DueDate"`
-	PaymentTerms      string     `json:"PaymentTerms"`
-	PaymentTermGroup  string     `json:"PaymentTermGroup"`
-	OutstandingDays   int        `json:"OutstandingDays"`
-	PaidAmount        float64    `json:"PaidAmount"`
-	OutstandingAmount float64    `json:"OutstandingAmount"`
-	Z0To30Days        float64    `json:"z0to30Days"`
-	Z31To60Days       float64    `json:"z31to60Days"`
-	Z61To90Days       float64    `json:"z61to90Days"`
-	Z91PlusDays       float64    `json:"z91PlusDays"`
-}
+import "time"
 
 type AgingSummary struct {
 	Z0To30Days  float64 `json:"z0to30Days"`
@@ -48,7 +19,21 @@ type TotalSummary struct {
 	AccountBalance      float64 `json:"AccountBalance"`
 	UnreconciledBalance float64 `json:"UnreconciledBalance"`
 }
-
+type AgingDetail struct {
+	InvoiceNumber     int        `json:"InvoiceNumber"`
+	InvoiceDate       *time.Time `json:"InvoiceDate"`
+	InvoiceAmount     float64    `json:"InvoiceAmount"`
+	DueDate           *time.Time `json:"DueDate"`
+	PaymentTerms      string     `json:"PaymentTerms"`
+	PaymentTermGroup  string     `json:"PaymentTermGroup"`
+	OutstandingDays   int        `json:"OutstandingDays"`
+	PaidAmount        float64    `json:"PaidAmount"`
+	OutstandingAmount float64    `json:"OutstandingAmount"`
+	Z0To30Days        float64    `json:"z0to30Days"`
+	Z31To60Days       float64    `json:"z31to60Days"`
+	Z61To90Days       float64    `json:"z61to90Days"`
+	Z91PlusDays       float64    `json:"z91PlusDays"`
+}
 type CustomerAgingResponse struct {
 	Status         string         `json:"Status"`
 	CompanyDB      string         `json:"CompanyDB"`
@@ -63,26 +48,4 @@ type CustomerAgingResponse struct {
 	PaymentSummary PaymentSummary `json:"payment_summary"`
 	Total          TotalSummary   `json:"total"`
 	Cached         bool           `json:"cached"`
-}
-
-type AgingRow struct {
-	DocEntry          int
-	InvoiceNumber     int
-	InvoiceDate       *time.Time
-	CustomerCode      string
-	CustomerName      string
-	Balance           float64
-	TaxNumber         string
-	DueDate           *time.Time
-	PaymentTerms      string
-	SalesEmployee     string
-	PaymentTermGroup  string
-	OutstandingDays   int
-	InvoiceAmount     float64
-	PaidAmount        float64
-	OutstandingAmount float64
-	Z0To30Days        float64
-	Z31To60Days       float64
-	Z61To90Days       float64
-	Z91PlusDays       float64
 }

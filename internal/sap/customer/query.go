@@ -1,4 +1,4 @@
-package aging
+package customer
 
 const CustomerAgingQuery = `
 SELECT
