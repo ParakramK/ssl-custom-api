@@ -10,7 +10,3 @@ type DocumentSeries struct {
 	Description   *string `gorm:"column:description;default:-"`
 	KataNo        *int    `gorm:"column:kata_no"`
 }
-
-func (DocumentSeries) TableName() string {
-	return "document_series"
-}

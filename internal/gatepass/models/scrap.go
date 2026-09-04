@@ -21,9 +21,7 @@ type Scrap struct {
 	UpdatedAt        *string  `gorm:"column:updated_at;default:current_timestamp"`
 }
 
-func (Scrap) TableName() string {
-	return "scrap_entry"
-}
+func (Scrap) TableName() string { return "scrap_entry" }
 
 type ScrapMultiUnload struct {
 	Sn            int64    `gorm:"column:sn;primaryKey;autoIncrement"`
@@ -40,18 +38,10 @@ type ScrapMultiUnload struct {
 	UpdatedAt     *string  `gorm:"column:updated_at;default:current_timestamp"`
 }
 
-func (ScrapMultiUnload) TableName() string {
-	return "scrap_multi_unload"
-}
-
 type ScrapType struct {
 	Id            int64   `gorm:"column:id;primaryKey;autoIncrement"`
 	Type          string  `gorm:"column:type"`
 	Rate          float64 `gorm:"column:rate"`
 	UpdatedDate   *string `gorm:"column:updated_date;default:current_timestamp"`
 	IncrementRate float64 `gorm:"column:increment_rate"`
-}
-
-func (ScrapType) TableName() string {
-	return "scrap_type"
 }

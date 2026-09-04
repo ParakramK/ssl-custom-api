@@ -8,6 +8,4 @@ type Vendors struct {
 	Active     *bool  `gorm:"column:active;default:true"`
 }
 
-func (Vendors) TableName() string {
-	return "pan_supplier_mapping"
-}
+func (Vendors) TableName() string { return "pan_supplier_mapping" }

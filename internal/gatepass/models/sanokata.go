@@ -16,10 +16,6 @@ type Sanokata struct {
 	TokenNo         string  `gorm:"column:token_no"`
 }
 
-func (Sanokata) TableName() string {
-	return "sales_order"
-}
-
 type SHook struct {
 	Id         int64  `gorm:"column:id;primaryKey;autoIncrement"`
 	DocumentNo string `gorm:"column:document_number"`

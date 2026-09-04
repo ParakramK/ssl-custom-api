@@ -16,10 +16,6 @@ type LoadingEntry struct {
 	SoDocEntry      *int64  `gorm:"column:so_doc_entry"`
 }
 
-func (LoadingEntry) TableName() string {
-	return "loading_entry"
-}
-
 type LoadingEntryDetails struct {
 	ID             int64   `gorm:"column:id;primaryKey;autoIncrement"`
 	LoadingEntryID int64   `gorm:"column:loading_entry_id"`
@@ -30,18 +26,10 @@ type LoadingEntryDetails struct {
 	ItemCode       *string `gorm:"column:itemcode"`
 }
 
-func (LoadingEntryDetails) TableName() string {
-	return "loading_items"
-}
-
 type GateLoadingSlip struct {
 	ID            int64   `gorm:"column:id;primaryKey;autoIncrement"`
 	LoadingSlipNo string  `gorm:"column:loading_slip_no"`
 	PartyName     string  `gorm:"column:party_name"`
 	VehicleNumber string  `gorm:"column:vehicle_number"`
 	CreatedAt     *string `gorm:"column:created_at;default:current_timestamp"`
-}
-
-func (GateLoadingSlip) TableName() string {
-	return "loading_slips"
 }

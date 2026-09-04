@@ -11,7 +11,3 @@ type Agent struct {
 	IsActive  *bool    `gorm:"column:is_active;default:true"`
 	Remarks   *string  `gorm:"column:remarks;default:-"`
 }
-
-func (Agent) TableName() string {
-	return "agents"
-}

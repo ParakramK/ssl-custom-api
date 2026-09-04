@@ -18,9 +18,7 @@ type QualityReport struct {
 	PostingDate *string `gorm:"column:posting_date"`
 }
 
-func (QualityReport) TableName() string {
-	return "quality_report"
-}
+func (QualityReport) TableName() string { return "quality_report" }
 
 type QualityReportDetails struct {
 	ID         int64    `gorm:"column:id;primaryKey;autoIncrement"`
@@ -32,6 +30,4 @@ type QualityReportDetails struct {
 	Amount     *float64 `gorm:"column:amount"`
 }
 
-func (QualityReportDetails) TableName() string {
-	return "quality_report_details"
-}
+func (QualityReportDetails) TableName() string { return "quality_report_details" }

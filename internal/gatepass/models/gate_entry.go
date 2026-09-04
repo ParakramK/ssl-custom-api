@@ -16,7 +16,3 @@ type GateEntry struct {
 	ThulokataEntry *int    `gorm:"column:thulokata_entry"`
 	ScrapEntry     *int    `gorm:"column:scrap_entry"`
 }
-
-func (GateEntry) TableName() string {
-	return "gate_entries"
-}
