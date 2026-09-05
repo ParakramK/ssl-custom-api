@@ -2,15 +2,16 @@ package customer
 
 import (
 	"context"
-	"math"
 	"time"
+
+	"ssl-custom-api/internal/utils"
 )
 
 type Service struct {
-	repository *Repository
+	repository Repository
 }
 
-func NewService(repository *Repository) *Service {
+func NewService(repository Repository) *Service {
 	return &Service{
 		repository: repository,
 	}
@@ -20,7 +21,7 @@ func (s *Service) GetCustomerAging(
 	ctx context.Context,
 	cardCode string,
 	companyDB string,
-) (CustomerAgingResponse, error) {
+) (CustomerAgingDetail, error) {
 
 	rows, err := s.repository.GetCustomerAging(
 		ctx,
@@ -28,19 +29,19 @@ func (s *Service) GetCustomerAging(
 		companyDB,
 	)
 	if err != nil {
-		return CustomerAgingResponse{}, err
+		return CustomerAgingDetail{}, err
 	}
 
-	return BuildResponse(rows, companyDB, false), nil
+	return BuildAgingResponse(rows, companyDB, false), nil
 }
 
-func BuildResponse(
+func BuildAgingResponse(
 	rows []AgingRow,
 	companyDB string,
 	cached bool,
-) CustomerAgingResponse {
+) CustomerAgingDetail {
 
-	response := CustomerAgingResponse{
+	response := CustomerAgingDetail{
 		Status:    "Success",
 		CompanyDB: companyDB,
 		Cached:    cached,
@@ -52,7 +53,7 @@ func BuildResponse(
 
 	response.CardCode = rows[0].CustomerCode
 	response.CardName = rows[0].CustomerName
-	response.Balance = round2(rows[0].Balance)
+	response.Balance = utils.Round2(rows[0].Balance)
 	response.TaxNumber = rows[0].TaxNumber
 	response.SalesEmployee = rows[0].SalesEmployee
 	response.LastFetched = time.Now()
@@ -97,10 +98,10 @@ func ComputeAgingSummary(rows []AgingRow) AgingSummary {
 		summary.Z91PlusDays += row.Z91PlusDays
 	}
 
-	summary.Z0To30Days = round2(summary.Z0To30Days)
-	summary.Z31To60Days = round2(summary.Z31To60Days)
-	summary.Z61To90Days = round2(summary.Z61To90Days)
-	summary.Z91PlusDays = round2(summary.Z91PlusDays)
+	summary.Z0To30Days = utils.Round2(summary.Z0To30Days)
+	summary.Z31To60Days = utils.Round2(summary.Z31To60Days)
+	summary.Z61To90Days = utils.Round2(summary.Z61To90Days)
+	summary.Z91PlusDays = utils.Round2(summary.Z91PlusDays)
 
 	return summary
 }
@@ -119,12 +120,13 @@ func ComputePaymentSummary(rows []AgingRow) PaymentSummary {
 		}
 	}
 
-	summary.BG = round2(summary.BG)
-	summary.LC = round2(summary.LC)
-	summary.Other = round2(summary.Other)
+	summary.BG = utils.Round2(summary.BG)
+	summary.LC = utils.Round2(summary.LC)
+	summary.Other = utils.Round2(summary.Other)
 
 	return summary
 }
+
 func ComputeTotal(rows []AgingRow) TotalSummary {
 	if len(rows) == 0 {
 		return TotalSummary{}
@@ -139,11 +141,7 @@ func ComputeTotal(rows []AgingRow) TotalSummary {
 	accountBalance := rows[0].Balance
 
 	return TotalSummary{
-		AccountBalance:      round2(accountBalance),
-		UnreconciledBalance: round2(accountBalance - totalOutstanding),
+		AccountBalance:      utils.Round2(accountBalance),
+		UnreconciledBalance: utils.Round2(accountBalance - totalOutstanding),
 	}
-}
-
-func round2(value float64) float64 {
-	return math.Round(value*100) / 100
 }

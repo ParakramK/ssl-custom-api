@@ -1,19 +1,8 @@
 package customer
 
 import (
-	"math/big"
 	"time"
-
-	"github.com/SAP/go-hdb/driver"
 )
-
-func decimalToFloat64(d driver.Decimal) float64 {
-	rat := (*big.Rat)(&d)
-
-	value, _ := rat.Float64()
-
-	return value
-}
 
 type AgingRow struct {
 	DocEntry          int
