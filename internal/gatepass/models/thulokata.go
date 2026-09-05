@@ -14,6 +14,13 @@ type Thulokata struct {
 	GrossDate   *string  `gorm:"column:gross_date"`
 	GrossTime   *string  `gorm:"column:gross_time"`
 	PrintedBy   *string  `gorm:"column:printed_by"`
+
+	// One thulokata has many loading rows: thulokata_sales_order.th_entry_no -> thulokata.sn
+	Loadings []ThulokataLoading `gorm:"foreignKey:ThuloKataEntryNo;references:Sn"`
+	// Gate entries pointing at this record via sn FK: gate_entry.thulokata_entry -> thulokata.sn
+	GateEntries []GateEntry `gorm:"foreignKey:ThulokataEntry;references:Sn"`
+	// Business-key reference via shared entry number: thulokata.document_no -> gate_entry.document_number
+	GateEntry *GateEntry `gorm:"foreignKey:DocumentNo;references:DocumentNo"`
 }
 
 func (Thulokata) TableName() string {
@@ -36,6 +43,9 @@ type ThulokataLoading struct {
 	FinalDate     *string  `gorm:"column:final_date"`
 	FinalTime     *string  `gorm:"column:final_time"`
 	UserId        int      `gorm:"column:user_id;notNull"`
+
+	// Belongs to parent thulokata: th_entry_no -> thulokata.sn
+	Thulokata *Thulokata `gorm:"foreignKey:ThuloKataEntryNo;references:Sn"`
 }
 
 func (ThulokataLoading) TableName() string {

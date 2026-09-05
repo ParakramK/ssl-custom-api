@@ -14,6 +14,11 @@ type LoadingEntry struct {
 	Type            *string `gorm:"column:type"`
 	BillingComplete *bool   `gorm:"column:billing_complete;default:false"`
 	SoDocEntry      *int64  `gorm:"column:so_doc_entry"`
+
+	// One loading entry has many detail lines: loading_entry_details.loading_entry_id -> loading_entry.id
+	Details []LoadingEntryDetails `gorm:"foreignKey:LoadingEntryID;references:ID"`
+	// Gate entries pointing at this loading slip: gate_entry.loading_slip_no -> loading_entry.token
+	GateEntries []GateEntry `gorm:"foreignKey:LoadingSlipNo;references:LoadingSlipNo"`
 }
 
 type LoadingEntryDetails struct {
@@ -24,6 +29,9 @@ type LoadingEntryDetails struct {
 	Weight         *string `gorm:"column:weight"`
 	Bundles        *int    `gorm:"column:bundles"`
 	ItemCode       *string `gorm:"column:itemcode"`
+
+	// Belongs to parent loading entry: loading_entry_id -> loading_entry.id
+	LoadingEntry *LoadingEntry `gorm:"foreignKey:LoadingEntryID;references:ID"`
 }
 
 type GateLoadingSlip struct {

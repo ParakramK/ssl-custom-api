@@ -15,4 +15,18 @@ type GateEntry struct {
 	GateUser       *int    `gorm:"column:gate_user"`
 	ThulokataEntry *int    `gorm:"column:thulokata_entry"`
 	ScrapEntry     *int    `gorm:"column:scrap_entry"`
+
+	// Business-key references via shared entry/document number
+	// gate_entry.document_number -> scrap_entry.document_no
+	Scrap *Scrap `gorm:"foreignKey:DocumentNo;references:DocumentNo"`
+	// gate_entry.document_number -> thulokata.document_no
+	Thulokata *Thulokata `gorm:"foreignKey:DocumentNo;references:DocumentNo"`
+	// gate_entry.document_number -> quality_report.ssl_sno
+	QualityReport *QualityReport `gorm:"foreignKey:DocumentNo;references:SslSno"`
+	// Business-key reference: gate_entry.loading_slip_no -> loading_entry.token
+	LoadingEntry *LoadingEntry `gorm:"foreignKey:LoadingSlipNo;references:LoadingSlipNo"`
+	// One gate entry has many sanokata rows: sanokata.internal_numbering -> gate_entry.document_number
+	Sanokatas []Sanokata `gorm:"foreignKey:DocumentNo;references:DocumentNo"`
+	// One gate entry has many shook rows: shook.document_number -> gate_entry.document_number
+	SHooks []SHook `gorm:"foreignKey:DocumentNo;references:DocumentNo"`
 }

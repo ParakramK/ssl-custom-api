@@ -3,23 +3,29 @@ package config
 import (
 	"fmt"
 	"os"
+	"regexp"
 	"strconv"
 
 	"github.com/joho/godotenv"
 )
 
+var validMySQLDatabase = regexp.MustCompile(`^[A-Za-z0-9_$]+$`)
+
 type Config struct {
-	APIKey       string
-	HANAHost     string
-	HANAPort     int
-	HANAUser     string
-	HANAPassword string
-	HANASchema   string
+	APIKey        string
+	HANAHost      string
+	HANAPort      int
+	HANAUser      string
+	HANAPassword  string
+	HANASchema    string
+	MySQLHost     string
+	MySQLPort     int
+	MySQLUser     string
+	MySQLPassword string
+	MySQLDatabase string
 }
 
 func Load() (*Config, error) {
-	// Load .env if it exists.
-	// In production, environment variables can be provided directly.
 	_ = godotenv.Load()
 
 	port, err := strconv.Atoi(getEnv("HANA_PORT", "30015"))
@@ -28,12 +34,17 @@ func Load() (*Config, error) {
 	}
 
 	cfg := &Config{
-		APIKey:       os.Getenv("API_KEY"),
-		HANAHost:     os.Getenv("HANA_HOST"),
-		HANAPort:     port,
-		HANAUser:     os.Getenv("HANA_USER"),
-		HANAPassword: os.Getenv("HANA_PASSWORD"),
-		HANASchema:   os.Getenv("HANA_SCHEMA"),
+		APIKey:        os.Getenv("API_KEY"),
+		HANAHost:      os.Getenv("HANA_HOST"),
+		HANAPort:      port,
+		HANAUser:      os.Getenv("HANA_USER"),
+		HANAPassword:  os.Getenv("HANA_PASSWORD"),
+		HANASchema:    os.Getenv("HANA_SCHEMA"),
+		MySQLHost:     os.Getenv("MYSQL_HOST"),
+		MySQLPort:     3306,
+		MySQLUser:     os.Getenv("MYSQL_USER"),
+		MySQLPassword: os.Getenv("MYSQL_PASSWORD"),
+		MySQLDatabase: os.Getenv("MYSQL_DATABASE"),
 	}
 
 	if err := cfg.Validate(); err != nil {
@@ -58,6 +69,14 @@ func (c *Config) Validate() error {
 
 	if c.HANASchema == "" {
 		return fmt.Errorf("HANA_SCHEMA is required")
+	}
+
+	if c.MySQLDatabase == "" {
+		return fmt.Errorf("MYSQL_DATABASE is required")
+	}
+
+	if !validMySQLDatabase.MatchString(c.MySQLDatabase) {
+		return fmt.Errorf("invalid MYSQL_DATABASE: %q", c.MySQLDatabase)
 	}
 
 	return nil

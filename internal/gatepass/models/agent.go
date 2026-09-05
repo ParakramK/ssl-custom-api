@@ -10,4 +10,7 @@ type Agent struct {
 	UpdatedAt *string  `gorm:"column:updated_at"`
 	IsActive  *bool    `gorm:"column:is_active;default:true"`
 	Remarks   *string  `gorm:"column:remarks;default:-"`
+
+	// Reverse of business-key reference: quality_report.agent_name -> agent.agent
+	QualityReports []QualityReport `gorm:"foreignKey:AgentName;references:Agent"`
 }

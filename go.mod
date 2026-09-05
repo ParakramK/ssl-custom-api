@@ -11,7 +11,7 @@ require (
 	gorm.io/driver/mysql v1.6.0
 	gorm.io/gen v0.3.29
 	gorm.io/gorm v1.31.2
-	gorm.io/plugin/dbresolver v1.6.2 // indirect
+	gorm.io/plugin/dbresolver v1.6.2
 )
 
 require (

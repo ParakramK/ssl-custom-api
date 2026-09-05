@@ -2,12 +2,12 @@ package main
 
 import (
 	"log"
-	"net/http"
 
+	"ssl-custom-api/internal/app"
 	"ssl-custom-api/internal/config"
 	"ssl-custom-api/internal/providers/hana"
-
-	"ssl-custom-api/internal/sap/customer"
+	"ssl-custom-api/internal/providers/mysql"
+	"ssl-custom-api/internal/router"
 )
 
 func main() {
@@ -27,17 +27,27 @@ func main() {
 	}
 	defer hanaProvider.Close()
 
+	mysqlProvider, err := mysql.NewProvider(mysql.Config{
+		Host:     cfg.MySQLHost,
+		Port:     cfg.MySQLPort,
+		User:     cfg.MySQLUser,
+		Password: cfg.MySQLPassword,
+		Database: cfg.MySQLDatabase,
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer mysqlProvider.Close()
+
 	log.Println("HANA provider initialized")
+	log.Println("MySQL provider initialized")
 
-	repository := customer.NewRepository(hanaProvider)
-	service := customer.NewService(repository)
-	handler := customer.NewHandler(service)
-
-	http.HandleFunc("/api/customer/aging", handler.GetCustomerAging)
+	handlers := app.New(hanaProvider, mysqlProvider)
+	r := router.Setup(handlers)
 
 	log.Println("API listening on :8080")
 
-	if err := http.ListenAndServe(":8080", nil); err != nil {
+	if err := r.Listen(":8080"); err != nil {
 		log.Fatal(err)
 	}
 }
