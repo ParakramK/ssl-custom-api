@@ -18,14 +18,18 @@ import (
 func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 	return &Query{
 		db:     db,
+		ApiKey: newApiKey(db, opts...),
 		Module: newModule(db, opts...),
+		User:   newUser(db, opts...),
 	}
 }
 
 type Query struct {
 	db *gorm.DB
 
+	ApiKey apiKey
 	Module module
+	User   user
 }
 
 func (q *Query) Available() bool { return q.db != nil }
@@ -35,7 +39,9 @@ func (q *Query) UnderlyingDB() *gorm.DB { return q.db }
 func (q *Query) clone(db *gorm.DB) *Query {
 	return &Query{
 		db:     db,
+		ApiKey: q.ApiKey.clone(db),
 		Module: q.Module.clone(db),
+		User:   q.User.clone(db),
 	}
 }
 
@@ -50,17 +56,23 @@ func (q *Query) WriteDB() *Query {
 func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 	return &Query{
 		db:     db,
+		ApiKey: q.ApiKey.replaceDB(db),
 		Module: q.Module.replaceDB(db),
+		User:   q.User.replaceDB(db),
 	}
 }
 
 type queryCtx struct {
+	ApiKey *apiKeyDo
 	Module *moduleDo
+	User   *userDo
 }
 
 func (q *Query) WithContext(ctx context.Context) *queryCtx {
 	return &queryCtx{
+		ApiKey: q.ApiKey.WithContext(ctx),
 		Module: q.Module.WithContext(ctx),
+		User:   q.User.WithContext(ctx),
 	}
 }
 

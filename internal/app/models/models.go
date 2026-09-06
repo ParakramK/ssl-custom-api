@@ -5,5 +5,7 @@ func All() []any {
 	return []any{
 		&Module{},
 		&User{},
+		&ApiKey{},
+		// &ModulePermission{},
 	}
 }
