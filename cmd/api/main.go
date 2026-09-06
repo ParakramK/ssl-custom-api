@@ -7,6 +7,7 @@ import (
 	"ssl-custom-api/internal/config"
 	"ssl-custom-api/internal/providers/hana"
 	"ssl-custom-api/internal/providers/mysql"
+	"ssl-custom-api/internal/providers/postgres"
 	"ssl-custom-api/internal/router"
 )
 
@@ -39,8 +40,22 @@ func main() {
 	}
 	defer mysqlProvider.Close()
 
+	postgresProvider, err := postgres.NewProvider(postgres.Config{
+		Host:     cfg.PGHost,
+		Port:     cfg.PGPort,
+		User:     cfg.PGUser,
+		Password: cfg.PGPassword,
+		Database: cfg.PGDatabase,
+		SSLMode:  cfg.PGSSLMode,
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer postgresProvider.Close()
+
 	log.Println("HANA provider initialized")
 	log.Println("MySQL provider initialized")
+	log.Println("PostgreSQL provider initialized")
 
 	handlers := app.New(hanaProvider, mysqlProvider)
 	r := router.Setup(handlers)

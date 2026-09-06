@@ -3,13 +3,11 @@ package main
 import (
 	"gorm.io/gen"
 
+	appmodels "ssl-custom-api/internal/app/models"
 	"ssl-custom-api/internal/gatepass/models"
 )
 
-// Generates type-safe query code for the quality-report models into
-// internal/gatepass/query. Run from the repo root:
-//
-//	go run ./cmd/gentool
+// go run ./cmd/gentool
 func main() {
 	g := gen.NewGenerator(gen.Config{
 		OutPath:      "internal/gatepass/query",
@@ -33,4 +31,14 @@ func main() {
 	)
 
 	g.Execute()
+
+	app := gen.NewGenerator(gen.Config{
+		OutPath:      "internal/app/query",
+		ModelPkgPath: "internal/app/models",
+	})
+
+	app.ApplyBasic(
+		appmodels.All()...,
+	)
+	app.Execute()
 }

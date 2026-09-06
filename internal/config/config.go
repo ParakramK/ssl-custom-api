@@ -23,6 +23,12 @@ type Config struct {
 	MySQLUser     string
 	MySQLPassword string
 	MySQLDatabase string
+	PGHost        string
+	PGPort        int
+	PGUser        string
+	PGPassword    string
+	PGDatabase    string
+	PGSSLMode     string
 }
 
 func Load() (*Config, error) {
@@ -45,6 +51,12 @@ func Load() (*Config, error) {
 		MySQLUser:     os.Getenv("MYSQL_USER"),
 		MySQLPassword: os.Getenv("MYSQL_PASSWORD"),
 		MySQLDatabase: os.Getenv("MYSQL_DATABASE"),
+		PGHost:        os.Getenv("PG_HOST"),
+		PGPort:        5432,
+		PGUser:        os.Getenv("PG_USER"),
+		PGPassword:    os.Getenv("PG_PASSWORD"),
+		PGDatabase:    os.Getenv("PG_DATABASE"),
+		PGSSLMode:     os.Getenv("PG_SSL_MODE"),
 	}
 
 	if err := cfg.Validate(); err != nil {
