@@ -1,7 +1,7 @@
 package scrap
 
 type QualityReportInput struct {
-	DocumentNo string `query:"ssl_no" doc:"SAP Business One scrap document number"`
+	DocumentNo string `query:"ssl_no" doc:"Gate entry document number"`
 }
 
 type QualityReportOutput struct {

@@ -1,7 +1,6 @@
 package sales
 
 import (
-	"ssl-custom-api/internal/gatepass/models"
 	"ssl-custom-api/internal/utils"
 )
 
@@ -23,56 +22,32 @@ func TagDetails(tag TagDataRow) BundleDetails {
 	}
 }
 
-func packThulokataRow(thl models.ThulokataLoading) ThulokataPackingRow {
-	row := ThulokataPackingRow{
-		Materials:     thl.Materials,
-		InitialWeight: thl.InitialWeight,
-		FinalWeight:   thl.FinalWeight,
-		NetWeight:     thl.NetWeight,
-		Bundles:       thl.Bundles,
+func packThulokataRow(row ThulokataRow) ThulokataPackingRow {
+	return ThulokataPackingRow{
+
+		Materials:     row.Materials,
+		InitialWeight: row.InitialWeight,
+		FinalWeight:   row.FinalWeight,
+		NetWeight:     row.NetWeight,
+		Bundles:       row.Bundles,
 	}
-	if th := thl.Thulokata; th != nil {
-		row.PartyName = th.PartyName
-		row.EntryNo = th.DocumentNo
-		if ge := th.GateEntry; ge != nil {
-			if le := ge.LoadingEntry; le != nil {
-				row.ShippingAddress = utils.StrVal(le.ShippingAddress)
-				row.SalesOrder = utils.StrVal(le.SalesOrder)
-				row.VehicleNumber = utils.StrVal(le.VehicleNo)
-			}
-		}
-	}
-	return row
 }
 
-func packSanokataRow(so models.Sanokata) SanokataPackingRow {
-	row := SanokataPackingRow{
-		OrderDate: so.LoadingDate,
-		Code:      so.Code,
-		SizeMM:    so.SizeMM,
-		Bundles:   so.Bundles,
-		Pieces:    so.Pieces,
-		NetWeight: so.NetWeight,
+func packSanokataRow(row SanokataRow) SanokataPackingRow {
+	return SanokataPackingRow{
+		Code:        row.Code,
+		SizeMM:      row.SizeMM,
+		Bundles:     row.Bundles,
+		Pieces:      row.Pieces,
+		NetWeight:   row.NetWeight,
+		LoadingDate: row.LoadingDate,
+		KataNo:      row.KataNo,
 	}
-	if u := so.User; u != nil {
-		row.Uid = &u.Id
-		row.KataNo = u.KataNo
-	}
-	if ge := so.GateEntry; ge != nil {
-		row.VehicleNumber = ge.VehicleNo
-		if le := ge.LoadingEntry; le != nil {
-			row.SalesOrder = utils.StrVal(le.SalesOrder)
-			row.PartyName = utils.StrVal(le.PartyName)
-			row.ShippingAddress = utils.StrVal(le.ShippingAddress)
-		}
-	}
-	return row
 }
-
-func packShookRow(sh ShookRow) ShookRow {
-	return ShookRow{
-		DocumentNo: sh.DocumentNo,
-		Size:       sh.Size,
-		Quantity:   sh.Quantity,
+func packShookRow(row SHookLine) SHookRow {
+	return SHookRow{
+		DocumentNo: row.DocumentNo,
+		Size:       row.Size,
+		Quantity:   row.Quantity,
 	}
 }
