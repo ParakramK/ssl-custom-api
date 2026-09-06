@@ -1,0 +1,1 @@
+docker compose  -f db.compose.yml down
