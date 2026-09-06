@@ -6,6 +6,7 @@ package query
 
 import (
 	"context"
+	"ssl-custom-api/internal/app/models"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -15,8 +16,6 @@ import (
 	"gorm.io/gen/field"
 
 	"gorm.io/plugin/dbresolver"
-
-	"ssl-custom-api/internal/app/models"
 )
 
 func newModule(db *gorm.DB, opts ...gen.DOOption) module {
