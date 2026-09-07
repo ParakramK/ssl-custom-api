@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"ssl-custom-api/internal/app"
+	"ssl-custom-api/internal/app/auth"
 	"ssl-custom-api/internal/config"
 	"ssl-custom-api/internal/providers/hana"
 	"ssl-custom-api/internal/providers/mysql"
@@ -16,9 +17,11 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	hanaProvider, err := hana.NewProvider(hana.Config{
-		Host:     cfg.HANAHost,
+	jwtService, err_jwt := auth.NewJWT(cfg.JWTSecret)
+	if err_jwt != nil {
+		log.Fatal(err_jwt)
+	}
+	hanaProvider, err := hana.NewProvider(hana.Config{		Host:     cfg.HANAHost,
 		Port:     cfg.HANAPort,
 		User:     cfg.HANAUser,
 		Password: cfg.HANAPassword,
@@ -57,7 +60,7 @@ func main() {
 	log.Println("MySQL provider initialized")
 	log.Println("PostgreSQL provider initialized")
 
-	handlers := app.New(hanaProvider, mysqlProvider)
+	handlers := app.New(hanaProvider, mysqlProvider, postgresProvider, jwtService)
 	r := router.Setup(handlers)
 
 	log.Println("API listening on :8080")
