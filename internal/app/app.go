@@ -1,10 +1,12 @@
 package app
 
 import (
+	"ssl-custom-api/internal/app/auth"
 	gatepassSales "ssl-custom-api/internal/gatepass/sales"
 	"ssl-custom-api/internal/gatepass/scrap"
 	"ssl-custom-api/internal/providers/hana"
 	"ssl-custom-api/internal/providers/mysql"
+	"ssl-custom-api/internal/providers/postgres"
 	"ssl-custom-api/internal/sap/customer"
 	"ssl-custom-api/internal/sap/sales"
 )
@@ -22,9 +24,18 @@ type GatepassHandlers struct {
 type Handlers struct {
 	SAP      *SAPHandlers
 	Gatepass *GatepassHandlers
+	App      *AppHandlers
 }
 
-func New(hanaProvider *hana.Provider, mysqlProvider *mysql.Provider) *Handlers {
+type AppHandlers struct {
+	Auth *auth.Handler
+}
+
+func New(hanaProvider *hana.Provider,
+	mysqlProvider *mysql.Provider,
+	postgresProvider *postgres.Provider,
+	jwt *auth.JWT,
+) *Handlers {
 	customerRepo := customer.NewRepository(hanaProvider)
 	customerService := customer.NewService(customerRepo)
 	customerHandler := customer.NewHandler(customerService)
@@ -41,6 +52,10 @@ func New(hanaProvider *hana.Provider, mysqlProvider *mysql.Provider) *Handlers {
 	gatepassSalesService := gatepassSales.NewService(gatepassSalesRepo)
 	gatepassSalesHandler := gatepassSales.NewHandler(gatepassSalesService)
 
+	appUserRepo := auth.NewUserRepository(postgresProvider.DB(), jwt)
+	appUserService := auth.NewService(appUserRepo)
+	appUserHandler := auth.NewHandler(appUserService)
+
 	return &Handlers{
 		SAP: &SAPHandlers{
 			Customer: customerHandler,
@@ -49,6 +64,9 @@ func New(hanaProvider *hana.Provider, mysqlProvider *mysql.Provider) *Handlers {
 		Gatepass: &GatepassHandlers{
 			Scrap: scrapHandler,
 			Sales: gatepassSalesHandler,
+		},
+		App: &AppHandlers{
+			Auth: appUserHandler,
 		},
 	}
 }

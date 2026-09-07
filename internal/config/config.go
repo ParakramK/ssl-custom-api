@@ -29,6 +29,7 @@ type Config struct {
 	PGPassword    string
 	PGDatabase    string
 	PGSSLMode     string
+	JWTSecret     string
 }
 
 func Load() (*Config, error) {
@@ -57,6 +58,7 @@ func Load() (*Config, error) {
 		PGPassword:    os.Getenv("PG_PASSWORD"),
 		PGDatabase:    os.Getenv("PG_DATABASE"),
 		PGSSLMode:     os.Getenv("PG_SSL_MODE"),
+		JWTSecret:     os.Getenv("JWT_SECRET"),
 	}
 
 	if err := cfg.Validate(); err != nil {
@@ -89,6 +91,21 @@ func (c *Config) Validate() error {
 
 	if !validMySQLDatabase.MatchString(c.MySQLDatabase) {
 		return fmt.Errorf("invalid MYSQL_DATABASE: %q", c.MySQLDatabase)
+	}
+	if c.PGHost == "" {
+		return fmt.Errorf("PG_HOST is required")
+	}
+
+	if c.PGUser == "" {
+		return fmt.Errorf("PG_USER is required")
+	}
+
+	if c.PGDatabase == "" {
+		return fmt.Errorf("PG_DATABASE is required")
+	}
+
+	if c.JWTSecret == "" {
+		return fmt.Errorf("JWT_SECRET is required")
 	}
 
 	return nil
