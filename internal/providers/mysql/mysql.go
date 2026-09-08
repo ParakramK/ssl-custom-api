@@ -84,6 +84,14 @@ func NewProvider(cfg Config) (*Provider, error) {
 		sqldb.Close()
 		return nil, fmt.Errorf("ping MySQL: %w", err)
 	}
+	if err := warmConnections(
+		context.Background(),
+		sqldb,
+		5,
+	); err != nil {
+		sqldb.Close()
+		return nil, fmt.Errorf("warm MySQL connections: %w", err)
+	}
 
 	gormDB, err := gorm.Open(gormmysql.New(gormmysql.Config{Conn: sqldb}), &gorm.Config{
 		SkipDefaultTransaction: true,
@@ -120,6 +128,34 @@ func (p *Provider) Ping() error {
 	}
 	if err := sqldb.Ping(); err != nil {
 		return fmt.Errorf("ping MySQL: %w", err)
+	}
+
+	return nil
+}
+
+func warmConnections(
+	ctx context.Context,
+	db *sql.DB,
+	count int,
+) error {
+	conns := make([]*sql.Conn, 0, count)
+
+	for i := 0; i < count; i++ {
+		conn, err := db.Conn(ctx)
+		if err != nil {
+			for _, c := range conns {
+				_ = c.Close()
+			}
+			return fmt.Errorf("warm connection %d: %w", i+1, err)
+		}
+
+		conns = append(conns, conn)
+	}
+
+	for _, conn := range conns {
+		if err := conn.Close(); err != nil {
+			return fmt.Errorf("release warmed connection: %w", err)
+		}
 	}
 
 	return nil
