@@ -11,6 +11,7 @@ import (
 	"ssl-custom-api/internal/app/models"
 	"ssl-custom-api/internal/config"
 	"ssl-custom-api/internal/providers/postgres"
+	"ssl-custom-api/internal/utils"
 )
 
 func Run(db *gorm.DB, password string) error {
@@ -31,6 +32,7 @@ func Run(db *gorm.DB, password string) error {
 		}
 
 		user = models.User{
+			ID:       utils.NewV7ID(),
 			Username: "admin",
 			Email:    "admin@ssl.com",
 			Password: password,
