@@ -27,6 +27,7 @@ type Handlers struct {
 	Gatepass *GatepassHandlers
 	App      *AppHandlers
 	JWT      *auth.JWT
+	APIKey   string
 }
 
 type AppHandlers struct {
@@ -38,6 +39,7 @@ func New(hanaProvider *hana.Provider,
 	mysqlProvider *mysql.Provider,
 	postgresProvider *postgres.Provider,
 	jwt *auth.JWT,
+	apiKey string,
 ) *Handlers {
 	customerRepo := customer.NewRepository(hanaProvider)
 	customerService := customer.NewService(customerRepo)
@@ -76,6 +78,7 @@ func New(hanaProvider *hana.Provider,
 			Auth:   appUserHandler,
 			ApiKey: appApiKeyHandler,
 		},
-		JWT: jwt,
+		JWT:    jwt,
+		APIKey: apiKey,
 	}
 }

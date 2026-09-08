@@ -6,11 +6,16 @@ import (
 	"io"
 	"net/http"
 	"testing"
+	"time"
 
 	"ssl-custom-api/internal/app"
+	apikey "ssl-custom-api/internal/app/api_key"
+	"ssl-custom-api/internal/app/auth"
 	"ssl-custom-api/internal/gatepass/scrap"
 	"ssl-custom-api/internal/sap/customer"
 	"ssl-custom-api/internal/sap/sales"
+
+	"github.com/google/uuid"
 )
 
 func strPtr(v string) *string {
@@ -51,6 +56,7 @@ func (s stubScrapRepo) GetQualityReport(
 }
 
 func testHandlers() *app.Handlers {
+	testJWT, _ := auth.NewJWT("test-secret")
 	return &app.Handlers{
 		SAP: &app.SAPHandlers{
 			Customer: customer.NewHandler(customer.NewService(stubCustomerRepo{})),
@@ -71,6 +77,12 @@ func testHandlers() *app.Handlers {
 				scrapErr: scrap.ErrQualityReportNotFound,
 			})),
 		},
+		App: &app.AppHandlers{
+			Auth:   auth.NewHandler(auth.NewService(auth.NewUserRepository(nil, testJWT))),
+			ApiKey: apikey.NewHandler(apikey.NewApiKeyService(apikey.NewApiKeyRepository(nil))),
+		},
+		JWT:    testJWT,
+		APIKey: "test-key",
 	}
 }
 
@@ -84,6 +96,7 @@ func doRequest(t *testing.T, path string) (int, map[string]any) {
 	r := Setup(testHandlers())
 
 	req, _ := http.NewRequest(http.MethodGet, path, nil)
+	req.Header.Set("X-API-Key", "test-key")
 	resp, err := r.Test(req)
 	if err != nil {
 		t.Fatalf("GET %s failed: %v", path, err)
@@ -96,6 +109,73 @@ func doRequest(t *testing.T, path string) (int, map[string]any) {
 	_ = json.Unmarshal(body, &decoded)
 
 	return resp.StatusCode, decoded
+}
+
+func TestApiKeysRequiresAuth(t *testing.T) {
+	status, _ := doRequest(t, "/api/v1/app/keys/")
+
+	if status != http.StatusUnauthorized {
+		t.Errorf("expected 401, got %d", status)
+	}
+}
+
+func TestApiKeysInvalidCursor(t *testing.T) {
+	jwtSvc, err := auth.NewJWT("test-secret")
+	if err != nil {
+		t.Fatal(err)
+	}
+	token, err := jwtSvc.GenerateToken(uuid.New(), time.Hour)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	r := Setup(testHandlers())
+
+	// Malformed cursor must be rejected by the paginate middleware
+	// with 400 before the handler runs (no DB needed).
+	req, _ := http.NewRequest(http.MethodGet, "/api/v1/app/keys/?cursor=not-valid!!!", nil)
+	req.Header.Set("Authorization", "Bearer "+token)
+	resp, err := r.Test(req)
+	if err != nil {
+		t.Fatalf("GET keys failed: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusBadRequest {
+		t.Errorf("expected 400, got %d", resp.StatusCode)
+	}
+}
+
+func TestMachineRoutesRequireAPIKey(t *testing.T) {
+	r := Setup(testHandlers())
+
+	for _, path := range []string{
+		"/api/v1/sap/customers/aging?CardCode=C001&CompanyDB=DB1",
+		"/api/v1/gatepass/quality-report?ssl_no=SSL001",
+	} {
+		req, _ := http.NewRequest(http.MethodGet, path, nil)
+		resp, err := r.Test(req)
+		if err != nil {
+			t.Fatalf("GET %s failed: %v", path, err)
+		}
+		resp.Body.Close()
+
+		if resp.StatusCode != http.StatusUnauthorized {
+			t.Errorf("GET %s without key: expected 401, got %d", path, resp.StatusCode)
+		}
+
+		req, _ = http.NewRequest(http.MethodGet, path, nil)
+		req.Header.Set("X-API-Key", "wrong-key")
+		resp, err = r.Test(req)
+		if err != nil {
+			t.Fatalf("GET %s failed: %v", path, err)
+		}
+		resp.Body.Close()
+
+		if resp.StatusCode != http.StatusUnauthorized {
+			t.Errorf("GET %s with wrong key: expected 401, got %d", path, resp.StatusCode)
+		}
+	}
 }
 
 func TestHealth(t *testing.T) {
@@ -145,6 +225,7 @@ func TestSalesTopSuccessShape(t *testing.T) {
 	r := Setup(testHandlers())
 
 	req, _ := http.NewRequest(http.MethodGet, "/api/v1/sap/sales/top?CompanyDB=DB1", nil)
+	req.Header.Set("X-API-Key", "test-key")
 	resp, err := r.Test(req)
 	if err != nil {
 		t.Fatalf("GET sales/top failed: %v", err)
@@ -221,6 +302,7 @@ func TestQualityReportNotFound(t *testing.T) {
 	r := Setup(handlers)
 
 	req, _ := http.NewRequest(http.MethodGet, "/api/v1/gatepass/quality-report?ssl_no=SSL999", nil)
+	req.Header.Set("X-API-Key", "test-key")
 	resp, err := r.Test(req)
 	if err != nil {
 		t.Fatalf("GET quality-report failed: %v", err)

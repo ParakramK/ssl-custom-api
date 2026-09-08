@@ -69,3 +69,4 @@ Temporary Items
 *.env
 !.env.example
 bin/*
+atlas_guide.md

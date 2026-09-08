@@ -21,10 +21,9 @@ type CreateApiKeyOutput struct {
 }
 
 type ApiKeyListResponse struct {
-	ApiKeys []ApiKeyRow `json:"api_keys"`
-	// Cursor for the next page (ID of the last key returned).
-	// Omitted when there are no more results.
-	NextCursor *uuid.UUID `json:"next_cursor,omitempty"`
+	ApiKeys    []ApiKeyRow `json:"api_keys"`
+	HasMore    bool        `json:"has_more"`
+	NextCursor string      `json:"next_cursor,omitempty"`
 }
 
 type ApiKeyListOutput struct {
@@ -32,10 +31,5 @@ type ApiKeyListOutput struct {
 }
 
 type ListApiKeysInput struct {
-	// Optional filter; omit (or Nil) to list all keys.
 	UserID uuid.UUID `query:"user_id" doc:"Filter by user ID (omit to list all)"`
-	// Keyset cursor: ID of the last key from the previous page.
-	// Omit to start from the beginning.
-	After uuid.UUID `query:"after" doc:"Return keys with ID greater than this cursor"`
-	Limit int       `query:"limit" default:"10" minimum:"1" maximum:"100" doc:"Max keys per page"`
 }

@@ -3,9 +3,11 @@ package apikey
 import (
 	"context"
 	"ssl-custom-api/internal/app/models"
+	"ssl-custom-api/internal/app/paging"
 	"ssl-custom-api/internal/app/query"
 
 	"github.com/google/uuid"
+	"gorm.io/gen/field"
 	"gorm.io/gorm"
 )
 
@@ -13,7 +15,7 @@ type ApiKeyRepository interface {
 	CreateApiKey(apiKey *models.ApiKey) error
 	GetApiKeyByKey(ctx context.Context, key string) (*models.ApiKey, error)
 	DeleteApiKey(apiKey *models.ApiKey) error
-	ListApiKeys(ctx context.Context, userID uuid.UUID, limit int, after uuid.UUID) (ApiKeyListResponse, error)
+	ListApiKeys(ctx context.Context, userID uuid.UUID, pg paging.Query) ([]ApiKeyRow, bool, error)
 }
 
 func NewApiKeyRepository(db *gorm.DB) ApiKeyRepository {
@@ -53,9 +55,8 @@ func (r *apiKeyRepository) DeleteApiKey(apiKey *models.ApiKey) error {
 func (r *apiKeyRepository) ListApiKeys(
 	ctx context.Context,
 	userID uuid.UUID,
-	limit int,
-	after uuid.UUID,
-) (ApiKeyListResponse, error) {
+	pg paging.Query,
+) ([]ApiKeyRow, bool, error) {
 	q := query.Use(r.db)
 	var apiKeyRows []ApiKeyRow
 	stmt := q.ApiKey.WithContext(ctx).
@@ -68,20 +69,52 @@ func (r *apiKeyRepository) ListApiKeys(
 	if userID != uuid.Nil {
 		stmt = stmt.Where(q.ApiKey.UserID.Eq(userID))
 	}
-	if after != uuid.Nil {
-		stmt = stmt.Where(q.ApiKey.ID.Gt(after))
+	for _, s := range pg.Sorts {
+		stmt = stmt.Order(sortColumn(q, s.Field, s.Desc))
+	}
+	if pg.Cursor != nil {
+		stmt = stmt.Where(keysetCondition(q, pg.LeadingSort(), pg.Cursor))
+	}
+	limit := pg.Limit
+	if limit < 1 {
+		limit = 10
 	}
 	// Fetch one extra row to know whether another page exists.
-	if err := stmt.Order(q.ApiKey.ID.Asc()).Limit(limit + 1).Scan(&apiKeyRows); err != nil {
-		return ApiKeyListResponse{}, err
+	if err := stmt.Limit(limit + 1).Scan(&apiKeyRows); err != nil {
+		return nil, false, err
 	}
 
-	response := ApiKeyListResponse{ApiKeys: apiKeyRows}
 	if len(apiKeyRows) > limit {
-		response.ApiKeys = apiKeyRows[:limit]
-		last := apiKeyRows[limit-1].ID
-		response.NextCursor = &last
+		return apiKeyRows[:limit], true, nil
 	}
+	return apiKeyRows, false, nil
+}
 
-	return response, nil
+// sortColumn maps a middleware sort field to a real column.
+// Unknown fields fall back to id so a bad value can never inject SQL.
+func sortColumn(q *query.Query, f string, desc bool) field.Expr {
+	var col field.Expr = q.ApiKey.ID
+	if f == "key" {
+		col = q.ApiKey.Key
+	}
+	if desc {
+		return col.Desc()
+	}
+	return col.Asc()
+}
+
+// keysetCondition positions the scan after the cursor row on the leading
+// sort column, with id as the tiebreak.
+func keysetCondition(q *query.Query, lead paging.Sort, cur *paging.Cursor) field.Expr {
+	if lead.Field == "key" {
+		tie := field.And(q.ApiKey.Key.Eq(cur.Key), q.ApiKey.ID.Gt(cur.ID))
+		if lead.Desc {
+			return field.Or(q.ApiKey.Key.Lt(cur.Key), tie)
+		}
+		return field.Or(q.ApiKey.Key.Gt(cur.Key), tie)
+	}
+	if lead.Desc {
+		return q.ApiKey.ID.Lt(cur.ID)
+	}
+	return q.ApiKey.ID.Gt(cur.ID)
 }

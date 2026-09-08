@@ -21,7 +21,8 @@ func main() {
 	if err_jwt != nil {
 		log.Fatal(err_jwt)
 	}
-	hanaProvider, err := hana.NewProvider(hana.Config{		Host:     cfg.HANAHost,
+	hanaProvider, err := hana.NewProvider(hana.Config{
+		Host:     cfg.HANAHost,
 		Port:     cfg.HANAPort,
 		User:     cfg.HANAUser,
 		Password: cfg.HANAPassword,
@@ -60,7 +61,7 @@ func main() {
 	log.Println("MySQL provider initialized")
 	log.Println("PostgreSQL provider initialized")
 
-	handlers := app.New(hanaProvider, mysqlProvider, postgresProvider, jwtService)
+	handlers := app.New(hanaProvider, mysqlProvider, postgresProvider, jwtService, cfg.APIKey)
 	r := router.Setup(handlers)
 
 	log.Println("API listening on :8080")

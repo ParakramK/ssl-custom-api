@@ -3,6 +3,7 @@ package apikey
 import (
 	"context"
 	"ssl-custom-api/internal/app/models"
+	"ssl-custom-api/internal/app/paging"
 	"ssl-custom-api/internal/utils"
 
 	"github.com/google/uuid"
@@ -12,7 +13,7 @@ type ApiKeyService interface {
 	CreateApiKey(ctx context.Context, req *CreateApiKeyRequest) (*CreateApiKeyResponse, error)
 	GetApiKeyByKey(ctx context.Context, key string) (*models.ApiKey, error)
 	DeleteApiKey(ctx context.Context, apiKey *models.ApiKey) error
-	ListApiKeys(ctx context.Context, userID uuid.UUID, limit int, after uuid.UUID) (ApiKeyListResponse, error)
+	ListApiKeys(ctx context.Context, userID uuid.UUID, pg paging.Query) ([]ApiKeyRow, bool, error)
 }
 
 type apiKeyService struct {
@@ -57,8 +58,7 @@ func (s *apiKeyService) DeleteApiKey(ctx context.Context, apiKey *models.ApiKey)
 func (s *apiKeyService) ListApiKeys(
 	ctx context.Context,
 	userID uuid.UUID,
-	limit int,
-	after uuid.UUID,
-) (ApiKeyListResponse, error) {
-	return s.repo.ListApiKeys(ctx, userID, limit, after)
+	pg paging.Query,
+) ([]ApiKeyRow, bool, error) {
+	return s.repo.ListApiKeys(ctx, userID, pg)
 }
