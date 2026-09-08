@@ -1,7 +1,7 @@
 package scrap
 
 type QualityReportInput struct {
-	DocumentNo string `query:"ssl_no" doc:"Gate entry document number"`
+	DocumentNo string `query:"ssl_no" doc:"Gate entry document number" required:"true" example:"SSL/2023/0001"`
 }
 
 type QualityReportOutput struct {

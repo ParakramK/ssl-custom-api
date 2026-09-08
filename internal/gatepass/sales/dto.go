@@ -1,14 +1,14 @@
 package sales
 
 type TagDataInput struct {
-	BundleTag string `query:"tag_no" doc:"Tag No Printed on the bundle tag"`
+	BundleTag string `query:"tag_no" required:"true" doc:"Tag No Printed on the bundle tag"`
 }
 
 type TagDataOutput struct {
 	Body BundleDetails `json:"body"`
 }
 type PackingListInput struct {
-	SslSno string `query:"ssl_no" doc:"SSL Entry No"`
+	SslSno string `query:"ssl_no" required:"true" doc:"SSL Entry No"`
 }
 
 type PackingListOutput struct {
