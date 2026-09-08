@@ -1,6 +1,7 @@
 package app
 
 import (
+	"ssl-custom-api/internal/app/api_key"
 	"ssl-custom-api/internal/app/auth"
 	gatepassSales "ssl-custom-api/internal/gatepass/sales"
 	"ssl-custom-api/internal/gatepass/scrap"
@@ -25,10 +26,12 @@ type Handlers struct {
 	SAP      *SAPHandlers
 	Gatepass *GatepassHandlers
 	App      *AppHandlers
+	JWT      *auth.JWT
 }
 
 type AppHandlers struct {
-	Auth *auth.Handler
+	Auth   *auth.Handler
+	ApiKey *apikey.Handler
 }
 
 func New(hanaProvider *hana.Provider,
@@ -56,6 +59,10 @@ func New(hanaProvider *hana.Provider,
 	appUserService := auth.NewService(appUserRepo)
 	appUserHandler := auth.NewHandler(appUserService)
 
+	appApiKeyRepo := apikey.NewApiKeyRepository(postgresProvider.DB())
+	appApiKeyService := apikey.NewApiKeyService(appApiKeyRepo)
+	appApiKeyHandler := apikey.NewHandler(appApiKeyService)
+
 	return &Handlers{
 		SAP: &SAPHandlers{
 			Customer: customerHandler,
@@ -66,7 +73,9 @@ func New(hanaProvider *hana.Provider,
 			Sales: gatepassSalesHandler,
 		},
 		App: &AppHandlers{
-			Auth: appUserHandler,
+			Auth:   appUserHandler,
+			ApiKey: appApiKeyHandler,
 		},
+		JWT: jwt,
 	}
 }

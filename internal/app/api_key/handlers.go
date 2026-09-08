@@ -32,25 +32,10 @@ func (h *Handler) CreateApiKey(ctx context.Context, input *CreateApiKeyInput) (*
 
 	return &CreateApiKeyOutput{Body: *response}, nil
 }
-func (h *Handler) ListAllApiKeysByUserID(
-	ctx context.Context,
-	input *ListAllApiKeysByUserIDInput,
-) (*ListAllApiKeysByUserIDOutput, error) {
-	if input.UserID == uuid.Nil {
-		return nil, huma.Error400BadRequest("user_id is required")
-	}
-
-	response, err := h.service.ListAllApiKeysByUserID(ctx, input.UserID)
+func (h *Handler) ListApiKeys(ctx context.Context, input *ListApiKeysInput) (*ApiKeyListOutput, error) {
+	response, err := h.service.ListApiKeys(ctx, input.UserID, input.Limit, input.After)
 	if err != nil {
-		return nil, huma.Error500InternalServerError("failed to list API keys by user ID")
-	}
-
-	return &ListAllApiKeysByUserIDOutput{Body: response}, nil
-}
-func (h *Handler) ListAllApiKeys(ctx context.Context, _ *ListAllApiKeysInput) (*ApiKeyListOutput, error) {
-	response, err := h.service.ListAllApiKeys(ctx)
-	if err != nil {
-		return nil, huma.Error500InternalServerError("failed to list all API keys")
+		return nil, huma.Error500InternalServerError("failed to list API keys")
 	}
 
 	return &ApiKeyListOutput{Body: response}, nil

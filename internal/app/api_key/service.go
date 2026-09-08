@@ -12,8 +12,7 @@ type ApiKeyService interface {
 	CreateApiKey(ctx context.Context, req *CreateApiKeyRequest) (*CreateApiKeyResponse, error)
 	GetApiKeyByKey(ctx context.Context, key string) (*models.ApiKey, error)
 	DeleteApiKey(ctx context.Context, apiKey *models.ApiKey) error
-	ListAllApiKeysByUserID(ctx context.Context, id uuid.UUID) (ApiKeyListResponse, error)
-	ListAllApiKeys(ctx context.Context) (ApiKeyListResponse, error)
+	ListApiKeys(ctx context.Context, userID uuid.UUID, limit int, after uuid.UUID) (ApiKeyListResponse, error)
 }
 
 type apiKeyService struct {
@@ -31,6 +30,7 @@ func (s *apiKeyService) CreateApiKey(ctx context.Context, req *CreateApiKeyReque
 	}
 
 	apiKey := &models.ApiKey{
+		ID:     utils.NewV7ID(),
 		Key:    key,
 		UserID: req.UserID,
 	}
@@ -54,10 +54,11 @@ func (s *apiKeyService) GetApiKeyByKey(ctx context.Context, key string) (*models
 func (s *apiKeyService) DeleteApiKey(ctx context.Context, apiKey *models.ApiKey) error {
 	return s.repo.DeleteApiKey(apiKey)
 }
-func (s *apiKeyService) ListAllApiKeysByUserID(ctx context.Context, id uuid.UUID) (ApiKeyListResponse, error) {
-	return s.repo.ListAllApiKeysByUserID(ctx, id)
-}
-
-func (s *apiKeyService) ListAllApiKeys(ctx context.Context) (ApiKeyListResponse, error) {
-	return s.repo.ListAllApiKeys(ctx)
+func (s *apiKeyService) ListApiKeys(
+	ctx context.Context,
+	userID uuid.UUID,
+	limit int,
+	after uuid.UUID,
+) (ApiKeyListResponse, error) {
+	return s.repo.ListApiKeys(ctx, userID, limit, after)
 }

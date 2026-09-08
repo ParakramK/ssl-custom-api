@@ -13,8 +13,7 @@ type ApiKeyRepository interface {
 	CreateApiKey(apiKey *models.ApiKey) error
 	GetApiKeyByKey(ctx context.Context, key string) (*models.ApiKey, error)
 	DeleteApiKey(apiKey *models.ApiKey) error
-	ListAllApiKeysByUserID(ctx context.Context, id uuid.UUID) (ApiKeyListResponse, error)
-	ListAllApiKeys(ctx context.Context) (ApiKeyListResponse, error)
+	ListApiKeys(ctx context.Context, userID uuid.UUID, limit int, after uuid.UUID) (ApiKeyListResponse, error)
 }
 
 func NewApiKeyRepository(db *gorm.DB) ApiKeyRepository {
@@ -51,36 +50,38 @@ func (r *apiKeyRepository) DeleteApiKey(apiKey *models.ApiKey) error {
 	return result.Error
 }
 
-func (r *apiKeyRepository) ListAllApiKeysByUserID(ctx context.Context, id uuid.UUID) (ApiKeyListResponse, error) {
-	var apiKeyRows []ApiKeyRow
-	q := query.Use(r.db)
-	err := q.ApiKey.WithContext(ctx).
-		Select(
-			q.ApiKey.ID,
-			q.ApiKey.Key,
-		).
-		Where(q.ApiKey.UserID.Eq(id)).
-		Scan(&apiKeyRows)
-	if err != nil {
-		return ApiKeyListResponse{}, err
-	}
-	return ApiKeyListResponse{ApiKeys: apiKeyRows}, nil
-}
-
-func (r *apiKeyRepository) ListAllApiKeys(ctx context.Context) (ApiKeyListResponse, error) {
+func (r *apiKeyRepository) ListApiKeys(
+	ctx context.Context,
+	userID uuid.UUID,
+	limit int,
+	after uuid.UUID,
+) (ApiKeyListResponse, error) {
 	q := query.Use(r.db)
 	var apiKeyRows []ApiKeyRow
-	err := q.ApiKey.WithContext(ctx).
+	stmt := q.ApiKey.WithContext(ctx).
 		Select(
 			q.ApiKey.ID,
 			q.ApiKey.Key,
 			q.User.Username.As("user_name"),
 		).
-		LeftJoin(q.User, q.User.ID.EqCol(q.ApiKey.UserID)).
-		Scan(&apiKeyRows)
-	if err != nil {
+		LeftJoin(q.User, q.User.ID.EqCol(q.ApiKey.UserID))
+	if userID != uuid.Nil {
+		stmt = stmt.Where(q.ApiKey.UserID.Eq(userID))
+	}
+	if after != uuid.Nil {
+		stmt = stmt.Where(q.ApiKey.ID.Gt(after))
+	}
+	// Fetch one extra row to know whether another page exists.
+	if err := stmt.Order(q.ApiKey.ID.Asc()).Limit(limit + 1).Scan(&apiKeyRows); err != nil {
 		return ApiKeyListResponse{}, err
 	}
 
-	return ApiKeyListResponse{ApiKeys: apiKeyRows}, nil
+	response := ApiKeyListResponse{ApiKeys: apiKeyRows}
+	if len(apiKeyRows) > limit {
+		response.ApiKeys = apiKeyRows[:limit]
+		last := apiKeyRows[limit-1].ID
+		response.NextCursor = &last
+	}
+
+	return response, nil
 }
