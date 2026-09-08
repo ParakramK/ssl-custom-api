@@ -20,6 +20,7 @@ func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 		db:     db,
 		ApiKey: newApiKey(db, opts...),
 		Module: newModule(db, opts...),
+		Role:   newRole(db, opts...),
 		User:   newUser(db, opts...),
 	}
 }
@@ -29,6 +30,7 @@ type Query struct {
 
 	ApiKey apiKey
 	Module module
+	Role   role
 	User   user
 }
 
@@ -41,6 +43,7 @@ func (q *Query) clone(db *gorm.DB) *Query {
 		db:     db,
 		ApiKey: q.ApiKey.clone(db),
 		Module: q.Module.clone(db),
+		Role:   q.Role.clone(db),
 		User:   q.User.clone(db),
 	}
 }
@@ -58,6 +61,7 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 		db:     db,
 		ApiKey: q.ApiKey.replaceDB(db),
 		Module: q.Module.replaceDB(db),
+		Role:   q.Role.replaceDB(db),
 		User:   q.User.replaceDB(db),
 	}
 }
@@ -65,6 +69,7 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 type queryCtx struct {
 	ApiKey *apiKeyDo
 	Module *moduleDo
+	Role   *roleDo
 	User   *userDo
 }
 
@@ -72,6 +77,7 @@ func (q *Query) WithContext(ctx context.Context) *queryCtx {
 	return &queryCtx{
 		ApiKey: q.ApiKey.WithContext(ctx),
 		Module: q.Module.WithContext(ctx),
+		Role:   q.Role.WithContext(ctx),
 		User:   q.User.WithContext(ctx),
 	}
 }

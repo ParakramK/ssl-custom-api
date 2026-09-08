@@ -30,6 +30,12 @@ func newUser(db *gorm.DB, opts ...gen.DOOption) user {
 	_user.Username = field.NewString(tableName, "username")
 	_user.Email = field.NewString(tableName, "email")
 	_user.Password = field.NewString(tableName, "password")
+	_user.RoleID = field.NewField(tableName, "role_id")
+	_user.Role = userBelongsToRole{
+		db: db.Session(&gorm.Session{}),
+
+		RelationField: field.NewRelation("Role", "models.Role"),
+	}
 
 	_user.fillFieldMap()
 
@@ -44,6 +50,8 @@ type user struct {
 	Username field.String
 	Email    field.String
 	Password field.String
+	RoleID   field.Field
+	Role     userBelongsToRole
 
 	fieldMap map[string]field.Expr
 }
@@ -64,6 +72,7 @@ func (u *user) updateTableName(table string) *user {
 	u.Username = field.NewString(table, "username")
 	u.Email = field.NewString(table, "email")
 	u.Password = field.NewString(table, "password")
+	u.RoleID = field.NewField(table, "role_id")
 
 	u.fillFieldMap()
 
@@ -88,21 +97,107 @@ func (u *user) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (u *user) fillFieldMap() {
-	u.fieldMap = make(map[string]field.Expr, 4)
+	u.fieldMap = make(map[string]field.Expr, 6)
 	u.fieldMap["id"] = u.ID
 	u.fieldMap["username"] = u.Username
 	u.fieldMap["email"] = u.Email
 	u.fieldMap["password"] = u.Password
+	u.fieldMap["role_id"] = u.RoleID
+
 }
 
 func (u user) clone(db *gorm.DB) user {
 	u.userDo.ReplaceConnPool(db.Statement.ConnPool)
+	u.Role.db = db.Session(&gorm.Session{Initialized: true})
+	u.Role.db.Statement.ConnPool = db.Statement.ConnPool
 	return u
 }
 
 func (u user) replaceDB(db *gorm.DB) user {
 	u.userDo.ReplaceDB(db)
+	u.Role.db = db.Session(&gorm.Session{})
 	return u
+}
+
+type userBelongsToRole struct {
+	db *gorm.DB
+
+	field.RelationField
+}
+
+func (a userBelongsToRole) Where(conds ...field.Expr) *userBelongsToRole {
+	if len(conds) == 0 {
+		return &a
+	}
+
+	exprs := make([]clause.Expression, 0, len(conds))
+	for _, cond := range conds {
+		exprs = append(exprs, cond.BeCond().(clause.Expression))
+	}
+	a.db = a.db.Clauses(clause.Where{Exprs: exprs})
+	return &a
+}
+
+func (a userBelongsToRole) WithContext(ctx context.Context) *userBelongsToRole {
+	a.db = a.db.WithContext(ctx)
+	return &a
+}
+
+func (a userBelongsToRole) Session(session *gorm.Session) *userBelongsToRole {
+	a.db = a.db.Session(session)
+	return &a
+}
+
+func (a userBelongsToRole) Model(m *models.User) *userBelongsToRoleTx {
+	return &userBelongsToRoleTx{a.db.Model(m).Association(a.Name())}
+}
+
+func (a userBelongsToRole) Unscoped() *userBelongsToRole {
+	a.db = a.db.Unscoped()
+	return &a
+}
+
+type userBelongsToRoleTx struct{ tx *gorm.Association }
+
+func (a userBelongsToRoleTx) Find() (result *models.Role, err error) {
+	return result, a.tx.Find(&result)
+}
+
+func (a userBelongsToRoleTx) Append(values ...*models.Role) (err error) {
+	targetValues := make([]interface{}, len(values))
+	for i, v := range values {
+		targetValues[i] = v
+	}
+	return a.tx.Append(targetValues...)
+}
+
+func (a userBelongsToRoleTx) Replace(values ...*models.Role) (err error) {
+	targetValues := make([]interface{}, len(values))
+	for i, v := range values {
+		targetValues[i] = v
+	}
+	return a.tx.Replace(targetValues...)
+}
+
+func (a userBelongsToRoleTx) Delete(values ...*models.Role) (err error) {
+	targetValues := make([]interface{}, len(values))
+	for i, v := range values {
+		targetValues[i] = v
+	}
+	return a.tx.Delete(targetValues...)
+}
+
+func (a userBelongsToRoleTx) Clear() error {
+	return a.tx.Clear()
+}
+
+func (a userBelongsToRoleTx) Count() int64 {
+	return a.tx.Count()
+}
+
+func (a userBelongsToRoleTx) Unscoped() *userBelongsToRoleTx {
+	a.tx = a.tx.Unscoped()
+	return &a
 }
 
 type userDo struct{ gen.DO }

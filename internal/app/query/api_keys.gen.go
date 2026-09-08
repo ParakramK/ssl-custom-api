@@ -33,6 +33,11 @@ func newApiKey(db *gorm.DB, opts ...gen.DOOption) apiKey {
 		db: db.Session(&gorm.Session{}),
 
 		RelationField: field.NewRelation("User", "models.User"),
+		Role: struct {
+			field.RelationField
+		}{
+			RelationField: field.NewRelation("User.Role", "models.Role"),
+		},
 	}
 
 	_apiKey.fillFieldMap()
@@ -115,6 +120,10 @@ type apiKeyBelongsToUser struct {
 	db *gorm.DB
 
 	field.RelationField
+
+	Role struct {
+		field.RelationField
+	}
 }
 
 func (a apiKeyBelongsToUser) Where(conds ...field.Expr) *apiKeyBelongsToUser {

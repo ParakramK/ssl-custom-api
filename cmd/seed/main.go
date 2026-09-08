@@ -16,19 +16,42 @@ import (
 
 func Run(db *gorm.DB, password string) error {
 	return db.Transaction(func(tx *gorm.DB) error {
-		var user models.User
+		var role models.Role
 
 		err := tx.
+			Where("name = ?", "admin").
+			First(&role).Error
+
+		if err == nil {
+			fmt.Println("admin role already exists")
+		} else if errors.Is(err, gorm.ErrRecordNotFound) {
+			role = models.Role{
+				ID:      utils.NewV7ID(),
+				Name:    "admin",
+				IsAdmin: true,
+			}
+
+			if err := tx.Create(&role).Error; err != nil {
+				return fmt.Errorf("create admin role: %w", err)
+			}
+
+			fmt.Println("admin role created successfully")
+		} else {
+			return fmt.Errorf("check admin role: %w", err)
+		}
+		var user models.User
+
+		err_user := tx.
 			Where("email = ?", "admin@ssl.com").
 			First(&user).Error
 
-		if err == nil {
+		if err_user == nil {
 			fmt.Println("admin already exists")
 			return nil
 		}
 
-		if !errors.Is(err, gorm.ErrRecordNotFound) {
-			return fmt.Errorf("check admin user: %w", err)
+		if !errors.Is(err_user, gorm.ErrRecordNotFound) {
+			return fmt.Errorf("check admin user: %w", err_user)
 		}
 
 		user = models.User{
@@ -36,10 +59,11 @@ func Run(db *gorm.DB, password string) error {
 			Username: "admin",
 			Email:    "admin@ssl.com",
 			Password: password,
+			RoleID:   role.ID,
 		}
 
-		if err := auth.NewUserRepository(tx, nil).CreateUser(&user); err != nil {
-			return fmt.Errorf("create admin: %w", err)
+		if err_user := auth.NewUserRepository(tx, nil).CreateUser(&user); err_user != nil {
+			return fmt.Errorf("create admin: %w", err_user)
 		}
 
 		fmt.Println("admin created successfully")
