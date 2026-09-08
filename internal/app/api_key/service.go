@@ -4,12 +4,16 @@ import (
 	"context"
 	"ssl-custom-api/internal/app/models"
 	"ssl-custom-api/internal/utils"
+
+	"github.com/google/uuid"
 )
 
 type ApiKeyService interface {
 	CreateApiKey(ctx context.Context, req *CreateApiKeyRequest) (*CreateApiKeyResponse, error)
 	GetApiKeyByKey(ctx context.Context, key string) (*models.ApiKey, error)
 	DeleteApiKey(ctx context.Context, apiKey *models.ApiKey) error
+	ListAllApiKeysByUserID(ctx context.Context, id uuid.UUID) (ApiKeyListResponse, error)
+	ListAllApiKeys(ctx context.Context) (ApiKeyListResponse, error)
 }
 
 type apiKeyService struct {
@@ -49,4 +53,11 @@ func (s *apiKeyService) GetApiKeyByKey(ctx context.Context, key string) (*models
 
 func (s *apiKeyService) DeleteApiKey(ctx context.Context, apiKey *models.ApiKey) error {
 	return s.repo.DeleteApiKey(apiKey)
+}
+func (s *apiKeyService) ListAllApiKeysByUserID(ctx context.Context, id uuid.UUID) (ApiKeyListResponse, error) {
+	return s.repo.ListAllApiKeysByUserID(ctx, id)
+}
+
+func (s *apiKeyService) ListAllApiKeys(ctx context.Context) (ApiKeyListResponse, error) {
+	return s.repo.ListAllApiKeys(ctx)
 }
