@@ -13,7 +13,7 @@ func SetupScrapRoutes(
 	base huma.API,
 	scrapHandler *scrap.Handler,
 ) {
-
+	tags := []string{"gatepass:scrap"}
 	huma.Register(base, huma.Operation{
 		OperationID: "getQualityReport",
 		Method:      http.MethodGet,
@@ -22,7 +22,7 @@ func SetupScrapRoutes(
 		Description: "Returns the quality report for an SSL entry number, " +
 			"including supplier and billing details plus grading details " +
 			"with payable lines.",
-		Tags:   []string{"gatepass"},
+		Tags:   tags,
 		Errors: []int{http.StatusBadRequest, http.StatusNotFound, http.StatusInternalServerError},
 	}, scrapHandler.GetQualityReport)
 
@@ -31,7 +31,7 @@ func SetupSalesRoutes(
 	base huma.API,
 	salesHandler *sales.Handler,
 ) {
-
+	tags := []string{"gatepass:sales"}
 	huma.Register(base, huma.Operation{
 		OperationID: "getTagData",
 		Method:      http.MethodGet,
@@ -39,7 +39,7 @@ func SetupSalesRoutes(
 		Summary:     "Get tag data",
 		Description: "Returns the tag data for a Tag Bundle No",
 
-		Tags:   []string{"gatepass"},
+		Tags:   tags,
 		Errors: []int{http.StatusBadRequest, http.StatusNotFound, http.StatusInternalServerError},
 	}, salesHandler.GetTagData)
 	huma.Register(base, huma.Operation{
@@ -49,7 +49,7 @@ func SetupSalesRoutes(
 		Summary:     "Get packing list",
 		Description: "Returns the packing list for an SSL entry number",
 
-		Tags:   []string{"gatepass"},
+		Tags:   tags,
 		Errors: []int{http.StatusBadRequest, http.StatusNotFound, http.StatusInternalServerError},
 	}, salesHandler.GetPackingList)
 

@@ -13,6 +13,7 @@ func SetupCustomerRoutes(
 	base huma.API,
 	customerHandler *customer.Handler,
 ) {
+	tags := []string{"sap:customer"}
 	customerGroup := huma.NewGroup(base, "/customers")
 	huma.Register(customerGroup, huma.Operation{
 		OperationID: "getCustomerAging",
@@ -22,7 +23,7 @@ func SetupCustomerRoutes(
 		Description: "Returns the accounts receivable aging report for a customer " +
 			"from SAP Business One (SAP HANA), including invoice details, aging " +
 			"buckets, payment-term summary and totals.",
-		Tags:   []string{"sap"},
+		Tags:   tags,
 		Errors: []int{http.StatusBadRequest, http.StatusInternalServerError},
 	}, customerHandler.GetCustomerAging)
 }
@@ -31,6 +32,7 @@ func SetupSalesRoutes(
 	base huma.API,
 	salesHandler *sales.Handler,
 ) {
+	tags := []string{"sap:sales"}
 	salesGroup := huma.NewGroup(base, "/sales")
 	huma.Register(salesGroup, huma.Operation{
 		OperationID: "getTopOutstandingCustomers",
@@ -40,7 +42,7 @@ func SetupSalesRoutes(
 		Description: "Returns the top customers by outstanding balance from " +
 			"SAP Business One (SAP HANA), including sales order vs billing " +
 			"variance details.",
-		Tags:   []string{"sap"},
+		Tags:   tags,
 		Errors: []int{http.StatusBadRequest, http.StatusInternalServerError},
 	}, salesHandler.GetTopOutStandingCustomers)
 }
