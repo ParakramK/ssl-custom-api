@@ -6,9 +6,10 @@ func All() []any {
 		&Role{},
 		&User{},
 		&Module{},
+		&Resource{},
 		&ApiKey{},
-		// &APIPermission{},
-		// &UserModulePermission{},
+		&APIPermission{},
+		&UserModulePermission{},
 	}
 
 }
