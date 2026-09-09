@@ -17,21 +17,27 @@ import (
 
 func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 	return &Query{
-		db:     db,
-		ApiKey: newApiKey(db, opts...),
-		Module: newModule(db, opts...),
-		Role:   newRole(db, opts...),
-		User:   newUser(db, opts...),
+		db:                   db,
+		APIPermission:        newAPIPermission(db, opts...),
+		ApiKey:               newApiKey(db, opts...),
+		Module:               newModule(db, opts...),
+		Resource:             newResource(db, opts...),
+		Role:                 newRole(db, opts...),
+		User:                 newUser(db, opts...),
+		UserModulePermission: newUserModulePermission(db, opts...),
 	}
 }
 
 type Query struct {
 	db *gorm.DB
 
-	ApiKey apiKey
-	Module module
-	Role   role
-	User   user
+	APIPermission        aPIPermission
+	ApiKey               apiKey
+	Module               module
+	Resource             resource
+	Role                 role
+	User                 user
+	UserModulePermission userModulePermission
 }
 
 func (q *Query) Available() bool { return q.db != nil }
@@ -40,11 +46,14 @@ func (q *Query) UnderlyingDB() *gorm.DB { return q.db }
 
 func (q *Query) clone(db *gorm.DB) *Query {
 	return &Query{
-		db:     db,
-		ApiKey: q.ApiKey.clone(db),
-		Module: q.Module.clone(db),
-		Role:   q.Role.clone(db),
-		User:   q.User.clone(db),
+		db:                   db,
+		APIPermission:        q.APIPermission.clone(db),
+		ApiKey:               q.ApiKey.clone(db),
+		Module:               q.Module.clone(db),
+		Resource:             q.Resource.clone(db),
+		Role:                 q.Role.clone(db),
+		User:                 q.User.clone(db),
+		UserModulePermission: q.UserModulePermission.clone(db),
 	}
 }
 
@@ -58,27 +67,36 @@ func (q *Query) WriteDB() *Query {
 
 func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 	return &Query{
-		db:     db,
-		ApiKey: q.ApiKey.replaceDB(db),
-		Module: q.Module.replaceDB(db),
-		Role:   q.Role.replaceDB(db),
-		User:   q.User.replaceDB(db),
+		db:                   db,
+		APIPermission:        q.APIPermission.replaceDB(db),
+		ApiKey:               q.ApiKey.replaceDB(db),
+		Module:               q.Module.replaceDB(db),
+		Resource:             q.Resource.replaceDB(db),
+		Role:                 q.Role.replaceDB(db),
+		User:                 q.User.replaceDB(db),
+		UserModulePermission: q.UserModulePermission.replaceDB(db),
 	}
 }
 
 type queryCtx struct {
-	ApiKey *apiKeyDo
-	Module *moduleDo
-	Role   *roleDo
-	User   *userDo
+	APIPermission        *aPIPermissionDo
+	ApiKey               *apiKeyDo
+	Module               *moduleDo
+	Resource             *resourceDo
+	Role                 *roleDo
+	User                 *userDo
+	UserModulePermission *userModulePermissionDo
 }
 
 func (q *Query) WithContext(ctx context.Context) *queryCtx {
 	return &queryCtx{
-		ApiKey: q.ApiKey.WithContext(ctx),
-		Module: q.Module.WithContext(ctx),
-		Role:   q.Role.WithContext(ctx),
-		User:   q.User.WithContext(ctx),
+		APIPermission:        q.APIPermission.WithContext(ctx),
+		ApiKey:               q.ApiKey.WithContext(ctx),
+		Module:               q.Module.WithContext(ctx),
+		Resource:             q.Resource.WithContext(ctx),
+		Role:                 q.Role.WithContext(ctx),
+		User:                 q.User.WithContext(ctx),
+		UserModulePermission: q.UserModulePermission.WithContext(ctx),
 	}
 }
 
