@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"time"
 
+	// "github.com/SAP/go-hdb/driver"
 	_ "github.com/SAP/go-hdb/driver"
 )
 
@@ -29,6 +30,7 @@ func NewProvider(cfg Config) (*Provider, error) {
 		cfg.Host,
 		cfg.Port,
 	)
+	// driver.SetSQLTrace(true)
 
 	db, err := sql.Open("hdb", dsn)
 	if err != nil {

@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"database/sql/driver"
 	"fmt"
+	"log"
 	"net/url"
 	"time"
 
@@ -26,9 +27,8 @@ type Config struct {
 }
 
 // readonlyConnector wraps the MySQL driver connector and forces every new
-// pooled connection into read-only mode. Writes then fail fast instead of
-// silently succeeding. This is a guardrail, not a substitute for a
-// SELECT-only database user, which is still recommended.
+// pooled connection into read-only mode.
+// GUARDRAIL
 type readonlyConnector struct {
 	driver.Connector
 }
@@ -42,12 +42,23 @@ func (c readonlyConnector) Connect(ctx context.Context) (driver.Conn, error) {
 	execer, ok := conn.(driver.ExecerContext)
 	if !ok {
 		_ = conn.Close()
-		return nil, fmt.Errorf("mysql: driver connection does not support exec")
+
+		return nil, fmt.Errorf(
+			"mysql: driver connection does not support ExecContext",
+		)
 	}
 
-	if _, err := execer.ExecContext(ctx, "SET SESSION TRANSACTION READ ONLY", nil); err != nil {
+	if _, err := execer.ExecContext(
+		ctx,
+		"SET SESSION TRANSACTION READ ONLY",
+		nil,
+	); err != nil {
 		_ = conn.Close()
-		return nil, fmt.Errorf("mysql: enforce read-only connection: %w", err)
+
+		return nil, fmt.Errorf(
+			"mysql: enforce read-only connection: %w",
+			err,
+		)
 	}
 
 	return conn, nil
@@ -73,64 +84,77 @@ func NewProvider(cfg Config) (*Provider, error) {
 		return nil, fmt.Errorf("create MySQL connector: %w", err)
 	}
 
-	sqldb := sql.OpenDB(readonlyConnector{Connector: connector})
+	sqldb := sql.OpenDB(
+		readonlyConnector{
+			Connector: connector,
+		},
+	)
 
+	// Connection pool configuration.
 	sqldb.SetMaxOpenConns(20)
 	sqldb.SetMaxIdleConns(5)
 	sqldb.SetConnMaxLifetime(30 * time.Minute)
 	sqldb.SetConnMaxIdleTime(5 * time.Minute)
 
-	if err := sqldb.Ping(); err != nil {
-		sqldb.Close()
+	pingCtx, cancel := context.WithTimeout(
+		context.Background(),
+		10*time.Second,
+	)
+	defer cancel()
+
+	if err := sqldb.PingContext(pingCtx); err != nil {
+		_ = sqldb.Close()
+
 		return nil, fmt.Errorf("ping MySQL: %w", err)
 	}
-	if err := warmConnections(
+
+	warmCtx, cancel := context.WithTimeout(
 		context.Background(),
-		sqldb,
-		5,
-	); err != nil {
-		sqldb.Close()
-		return nil, fmt.Errorf("warm MySQL connections: %w", err)
+		30*time.Second,
+	)
+	defer cancel()
+
+	if err := warmConnections(warmCtx, sqldb, 2); err != nil {
+		_ = sqldb.Close()
+
+		return nil, fmt.Errorf(
+			"warm MySQL connections: %w",
+			err,
+		)
 	}
 
-	gormDB, err := gorm.Open(gormmysql.New(gormmysql.Config{Conn: sqldb}), &gorm.Config{
-		SkipDefaultTransaction: true,
-		// The repositories run a small set of fixed-shape queries, so
-		// cache their prepared statements instead of re-preparing.
-		PrepareStmt: true,
-	})
+	stats := sqldb.Stats()
+
+	log.Printf(
+		"MySQL pool warmed: open=%d idle=%d inuse=%d",
+		stats.OpenConnections,
+		stats.Idle,
+		stats.InUse,
+	)
+
+	gormDB, err := gorm.Open(
+		gormmysql.New(
+			gormmysql.Config{
+				Conn: sqldb,
+			},
+		),
+		&gorm.Config{
+			SkipDefaultTransaction: true,
+			PrepareStmt:            false,
+		},
+	)
 	if err != nil {
-		sqldb.Close()
-		return nil, fmt.Errorf("open GORM MySQL: %w", err)
+		_ = sqldb.Close()
+
+		return nil, fmt.Errorf(
+			"open GORM MySQL: %w",
+			err,
+		)
 	}
 
-	return &Provider{db: gormDB}, nil
-}
-
-// DB exposes the GORM database handle for repositories. All connections
-// behind it are read-only (see readonlyConnector).
-func (p *Provider) DB() *gorm.DB {
-	return p.db
-}
-
-func (p *Provider) Close() error {
-	sqldb, err := p.db.DB()
-	if err != nil {
-		return err
-	}
-	return sqldb.Close()
-}
-
-func (p *Provider) Ping() error {
-	sqldb, err := p.db.DB()
-	if err != nil {
-		return err
-	}
-	if err := sqldb.Ping(); err != nil {
-		return fmt.Errorf("ping MySQL: %w", err)
-	}
-
-	return nil
+	return &Provider{
+		db: gormDB,
+	}, nil
 }
 
 func warmConnections(
@@ -138,6 +162,10 @@ func warmConnections(
 	db *sql.DB,
 	count int,
 ) error {
+	if count <= 0 {
+		return nil
+	}
+
 	conns := make([]*sql.Conn, 0, count)
 
 	for i := 0; i < count; i++ {
@@ -146,16 +174,71 @@ func warmConnections(
 			for _, c := range conns {
 				_ = c.Close()
 			}
-			return fmt.Errorf("warm connection %d: %w", i+1, err)
+
+			return fmt.Errorf(
+				"warm connection %d/%d: %w",
+				i+1,
+				count,
+				err,
+			)
 		}
 
 		conns = append(conns, conn)
 	}
 
-	for _, conn := range conns {
+	for i, conn := range conns {
 		if err := conn.Close(); err != nil {
-			return fmt.Errorf("release warmed connection: %w", err)
+			for j := i + 1; j < len(conns); j++ {
+				_ = conns[j].Close()
+			}
+
+			return fmt.Errorf(
+				"release warmed connection %d/%d: %w",
+				i+1,
+				count,
+				err,
+			)
 		}
+	}
+
+	return nil
+}
+
+func (p *Provider) DB() *gorm.DB {
+	return p.db
+}
+
+func (p *Provider) Close() error {
+	if p == nil || p.db == nil {
+		return nil
+	}
+
+	sqldb, err := p.db.DB()
+	if err != nil {
+		return err
+	}
+
+	return sqldb.Close()
+}
+
+func (p *Provider) Ping() error {
+	if p == nil || p.db == nil {
+		return fmt.Errorf("MySQL provider is not initialized")
+	}
+
+	sqldb, err := p.db.DB()
+	if err != nil {
+		return err
+	}
+
+	ctx, cancel := context.WithTimeout(
+		context.Background(),
+		10*time.Second,
+	)
+	defer cancel()
+
+	if err := sqldb.PingContext(ctx); err != nil {
+		return fmt.Errorf("ping MySQL: %w", err)
 	}
 
 	return nil
