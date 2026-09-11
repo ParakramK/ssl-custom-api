@@ -2,6 +2,7 @@ package roles
 
 import (
 	"context"
+	"ssl-custom-api/internal/app/auth"
 	"ssl-custom-api/internal/app/constants"
 	"ssl-custom-api/internal/app/models"
 	"ssl-custom-api/internal/app/query"
@@ -19,17 +20,18 @@ type RoleRepository interface {
 }
 
 type roleRepository struct {
-	db *gorm.DB
+	db  *gorm.DB
+	jwt *auth.JWT
 }
 
-func NewRoleRepository(db *gorm.DB) RoleRepository {
-	return &roleRepository{db: db}
+func NewRoleRepository(db *gorm.DB, jwt *auth.JWT) RoleRepository {
+	return &roleRepository{db: db, jwt: jwt}
 }
 func (r *roleRepository) ListRoles(ctx context.Context) (*RolesResponse, error) {
 	q := query.Use(r.db)
 	var roles []RoleRow
 	err := q.Role.WithContext(ctx).
-		Select(q.Role.ID, q.Role.Name, q.Role.IsAdmin).
+		Select(q.Role.ID.As("ID"), q.Role.Name.As("Name"), q.Role.IsAdmin.As("IsAdmin")).
 		Scan(&roles)
 	if err != nil {
 		return nil, err
@@ -83,6 +85,7 @@ func (r *roleRepository) CreateRole(ctx context.Context, input *CreateRoleReques
 	} else if exists {
 		return nil, constants.ErrRoleExists
 	}
+
 	role := &models.Role{
 		ID:      utils.NewV7ID(),
 		Name:    input.Name,

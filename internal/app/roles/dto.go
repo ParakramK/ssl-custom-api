@@ -23,7 +23,7 @@ type RolesResponse struct {
 	Roles []RoleRow `json:"roles" doc:"List of roles"`
 }
 type RolesOutput struct {
-	Body []RolesResponse
+	Body RolesResponse
 }
 
 type ListRolesRequest struct {
