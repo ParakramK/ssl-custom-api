@@ -67,9 +67,6 @@ func Setup(handlers *app.Handlers) *fiber.App {
 
 	api := humafiber.New(r, config)
 	v1 := huma.NewGroup(api, "/api/v1")
-	sapRoutes := huma.NewGroup(v1, "/sap")
-	gatepassRoutes := huma.NewGroup(v1, "/gatepass")
-	appRoutes := huma.NewGroup(v1, "/app")
 
 	// r.Use("/api/v1/sap", apiKeyAuth(handlers.APIKey))
 	// r.Use("/api/v1/gatepass", apiKeyAuth(handlers.APIKey))
@@ -80,12 +77,10 @@ func Setup(handlers *app.Handlers) *fiber.App {
 		AllowedSorts: []string{"id", "key"},
 	}))
 
-	sap.SetupCustomerRoutes(sapRoutes, handlers.SAP.Customer)
-	sap.SetupSalesRoutes(sapRoutes, handlers.SAP.Sales)
-	gatepass.SetupScrapRoutes(gatepassRoutes, handlers.Gatepass.Scrap)
-	gatepass.SetupSalesRoutes(gatepassRoutes, handlers.Gatepass.Sales)
-	appRouter.SetupAuthRoutes(appRoutes, handlers.App.Auth)
-	appRouter.SetupApiKeysRoutes(appRoutes, handlers.App.ApiKey, handlers.JWT)
+	sap.SetupSAPRoutes(v1, handlers)
+	gatepass.SetupGatepassRoutes(v1, handlers)
+	appRouter.SetupAppRoutes(v1, handlers)
+
 	setupHealthRoutes(v1)
 
 	return r

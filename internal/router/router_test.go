@@ -11,6 +11,7 @@ import (
 	"ssl-custom-api/internal/app"
 	apikey "ssl-custom-api/internal/app/api_key"
 	"ssl-custom-api/internal/app/auth"
+	"ssl-custom-api/internal/app/permissions"
 	"ssl-custom-api/internal/gatepass/scrap"
 	"ssl-custom-api/internal/sap/customer"
 	"ssl-custom-api/internal/sap/sales"
@@ -78,11 +79,15 @@ func testHandlers() *app.Handlers {
 			})),
 		},
 		App: &app.AppHandlers{
-			Auth:   auth.NewHandler(auth.NewService(auth.NewUserRepository(nil, testJWT))),
-			ApiKey: apikey.NewHandler(apikey.NewApiKeyService(apikey.NewApiKeyRepository(nil))),
+			Auth: auth.NewHandler(auth.NewService(auth.NewUserRepository(nil, testJWT))),
+			ApiKey: apikey.NewHandler(apikey.NewApiKeyService(
+				apikey.NewApiKeyRepository(nil),
+				permissions.NewAllowAllChecker(),
+			)),
 		},
-		JWT:    testJWT,
-		APIKey: "test-key",
+		JWT:           testJWT,
+		APIKey:        "test-key",
+		Authorization: permissions.NewAllowAllChecker(),
 	}
 }
 

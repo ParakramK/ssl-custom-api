@@ -10,9 +10,9 @@ import (
 	"github.com/danielgtaylor/huma/v2"
 )
 
-func SetupApiKeysRoutes(base huma.API, apikeyHandler *apikey.Handler, jwtSvc *auth.JWT) {
+func SetupApiKeysRoutes(base huma.API, apikeyHandler *apikey.Handler, jwtSvc *auth.JWT, resolver middleware.PrincipalResolver) {
 	keysBase := huma.NewGroup(base, "/keys")
-	keysBase.UseMiddleware(middleware.JWTAuth(base, jwtSvc))
+	keysBase.UseMiddleware(middleware.JWTAuth(base, jwtSvc, resolver))
 	tags := []string{"app:keys"}
 
 	openAPI := base.OpenAPI()
