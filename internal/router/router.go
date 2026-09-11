@@ -20,53 +20,15 @@ func Setup(handlers *app.Handlers) *fiber.App {
 		PassLocalsToContext: true,
 	})
 
+	config := huma.DefaultConfig("SSL Custom API", "1.0.0")
+	configureOpenAPI(&config)
+	api := humafiber.New(r, config)
+	v1 := huma.NewGroup(api, "/api/v1")
+	configureOpenAPITags(api)
+
 	setupSwagger(r)
 	setupScalar(r)
 	setupRedoc(r)
-
-	config := huma.DefaultConfig("SSL Custom API", "1.0.0")
-
-	config.OpenAPI.Info.Description = "Custom API For Integrating Gatepass and SAP Data and other Internal Systems."
-
-	config.CreateHooks = nil
-
-	config.Extensions = map[string]any{
-		"x-tagGroups": []map[string]any{
-			{
-				"name": "Application",
-				"tags": []string{
-					"app:auth",
-					"app:modules",
-					"app:keys",
-					"app:roles",
-					"app:users",
-				},
-			},
-			{
-				"name": "Gatepass",
-				"tags": []string{
-					"gatepass:sales",
-					"gatepass:scrap",
-				},
-			},
-			{
-				"name": "SAP",
-				"tags": []string{
-					"sap:customer",
-					"sap:sales",
-				},
-			},
-			{
-				"name": "System",
-				"tags": []string{
-					"health",
-				},
-			},
-		},
-	}
-
-	api := humafiber.New(r, config)
-	v1 := huma.NewGroup(api, "/api/v1")
 
 	// r.Use("/api/v1/sap", apiKeyAuth(handlers.APIKey))
 	// r.Use("/api/v1/gatepass", apiKeyAuth(handlers.APIKey))

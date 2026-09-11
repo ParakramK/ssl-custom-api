@@ -11,6 +11,7 @@ import (
 	"ssl-custom-api/internal/app"
 	apikey "ssl-custom-api/internal/app/api_key"
 	"ssl-custom-api/internal/app/auth"
+	"ssl-custom-api/internal/app/constants"
 	"ssl-custom-api/internal/app/permissions"
 	"ssl-custom-api/internal/gatepass/scrap"
 	"ssl-custom-api/internal/sap/customer"
@@ -75,7 +76,7 @@ func testHandlers() *app.Handlers {
 						{ScrapType: strPtr("A"), Qty: float64Ptr(100.5), Rate: float64Ptr(10)},
 					},
 				},
-				scrapErr: scrap.ErrQualityReportNotFound,
+				scrapErr: constants.ErrQualityReportNotFound,
 			})),
 		},
 		App: &app.AppHandlers{
@@ -302,7 +303,7 @@ func TestQualityReportSuccessShape(t *testing.T) {
 func TestQualityReportNotFound(t *testing.T) {
 	handlers := testHandlers()
 	handlers.Gatepass.Scrap = scrap.NewHandler(scrap.NewService(stubScrapRepo{
-		err: scrap.ErrQualityReportNotFound,
+		err: constants.ErrQualityReportNotFound,
 	}))
 	r := Setup(handlers)
 
