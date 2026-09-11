@@ -2,6 +2,8 @@ package users
 
 import (
 	"context"
+
+	"github.com/google/uuid"
 )
 
 type UserService struct {
@@ -20,4 +22,12 @@ func NewService(repository UserRepository) *UserService {
 // authorization lookup.
 func (S *UserService) CreateUser(ctx context.Context, req CreateUserInput) (*CreateUserResponse, error) {
 	return S.repository.CreateUser(ctx, &req.Body)
+}
+
+func (S *UserService) ListUsers(ctx context.Context, req ListUsersRequest) (*ListUsersResponse, error) {
+	var roleID *uuid.UUID
+	if req.RoleID != uuid.Nil {
+		roleID = &req.RoleID
+	}
+	return S.repository.ListUsers(ctx, roleID)
 }

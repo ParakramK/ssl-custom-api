@@ -19,3 +19,14 @@ type CreateUserResponse struct {
 type CreateUserOutput struct {
 	Body CreateUserResponse
 }
+
+type ListUsersRequest struct {
+	RoleID uuid.UUID `query:"role_id" doc:"Role ID" example:"00000000-0000-0000-0000-000000000000"`
+}
+
+type ListUsersResponse struct {
+	Users []UserRow `json:"users" doc:"List of users"`
+}
+type ListUsersOutput struct {
+	Body ListUsersResponse
+}

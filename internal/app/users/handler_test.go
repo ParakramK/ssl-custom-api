@@ -37,6 +37,15 @@ func (s *stubUserRepository) DeleteUser(_ *models.User) error { return nil }
 
 func (s *stubUserRepository) ChangeUserPassword(_, _, _ string) error { return nil }
 
+func (s *stubUserRepository) ListUsers(_ context.Context, _ *uuid.UUID) (*ListUsersResponse, error) {
+	return &ListUsersResponse{
+		Users: []UserRow{
+			{ID: uuid.New(), Username: "user1", RoleName: "role1"},
+			{ID: uuid.New(), Username: "user2", RoleName: "role2"},
+		},
+	}, nil
+}
+
 func TestCreateUserAdmin(t *testing.T) {
 	repo := &stubUserRepository{}
 	h := NewHandler(NewService(repo))

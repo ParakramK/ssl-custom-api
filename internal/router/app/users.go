@@ -38,5 +38,14 @@ func SetupUsersRoutes(base huma.API, handlers *users.Handler, jwtSvc *auth.JWT, 
 		Tags:        tags,
 		Security:    security,
 	}, handlers.CreateUser)
+	huma.Register(usersBase, huma.Operation{
+		OperationID: "listUsers",
+		Method:      http.MethodGet,
+		Path:        "/",
+		Summary:     "List all users",
+		Description: "Retrieves a list of all available users.",
+		Tags:        tags,
+		Security:    security,
+	}, handlers.ListUsers)
 
 }

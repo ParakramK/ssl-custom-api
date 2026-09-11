@@ -10,6 +10,7 @@ import (
 	"ssl-custom-api/internal/app/query"
 	"ssl-custom-api/internal/utils"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -18,6 +19,7 @@ type UserRepository interface {
 	CreateUser(ctx context.Context, input *CreateUserRequest) (*CreateUserResponse, error)
 	UpdateUser(user *models.User) error
 	DeleteUser(user *models.User) error
+	ListUsers(ctx context.Context, roleID *uuid.UUID) (*ListUsersResponse, error)
 }
 
 func NewUserRepository(db *gorm.DB, jwt *auth.JWT) UserRepository {
@@ -103,4 +105,35 @@ func (r *userRepository) CheckUserExists(
 	}
 
 	return existing, fmt.Errorf("%w: %q", constants.ErrUserExists, user.Username)
+}
+
+func (r *userRepository) ListUsers(
+	ctx context.Context,
+	roleID *uuid.UUID,
+) (*ListUsersResponse, error) {
+	q := query.Use(r.db)
+
+	userQuery := q.User.WithContext(ctx).
+		Join(
+			q.Role,
+			q.Role.ID.EqCol(q.User.RoleID),
+		)
+
+	if roleID != nil {
+		userQuery = userQuery.Where(q.User.RoleID.Eq(*roleID))
+	}
+
+	var users []UserRow
+	if err := userQuery.
+		Select(
+			q.User.ALL,
+			q.Role.Name.As("RoleName"),
+		).
+		Scan(&users); err != nil {
+		return nil, err
+	}
+
+	return &ListUsersResponse{
+		Users: users,
+	}, nil
 }

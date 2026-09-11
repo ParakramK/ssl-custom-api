@@ -35,16 +35,16 @@ func (h *Handler) CreateUser(ctx context.Context, input *CreateUserInput) (*Crea
 	return &CreateUserOutput{Body: *response}, nil
 }
 
-// func (h *Handler) ListUsers(ctx context.Context, input *ListUsersInput) (*ListUsersOutput, error) {
-// 	principal := auth.MustPrincipal(ctx)
-// 	if !principal.IsAdmin {
-// 		return nil, huma.Error403Forbidden("admin access required")
-// 	}
+func (h *Handler) ListUsers(ctx context.Context, req *ListUsersRequest) (*ListUsersOutput, error) {
+	principal := auth.MustPrincipal(ctx)
+	if !principal.IsAdmin {
+		return nil, huma.Error403Forbidden("admin access required")
+	}
 
-// 	response, err := h.service.ListUsers(ctx, *input)
-// 	if err != nil {
-// 		return nil, err
-// 	}
+	response, err := h.service.ListUsers(ctx, *req)
+	if err != nil {
+		return nil, err
+	}
 
-// 	return &ListUsersOutput{Body: *response}, nil
-// }
+	return &ListUsersOutput{Body: *response}, nil
+}
