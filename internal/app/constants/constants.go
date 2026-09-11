@@ -16,6 +16,7 @@ var (
 // Sentinel errors for modules and resources
 var ErrModuleExists = errors.New("module with the same name or code already exists")
 var ErrResourceExists = errors.New("resource with the same name or code already exists")
+var ErrUnknownModule = errors.New("unknown module")
 
 var ErrRoleExists = errors.New("role with the same name already exists")
 var ErrUserExists = errors.New("user with the same username or email already exists")
