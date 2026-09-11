@@ -4,13 +4,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
+	"ssl-custom-api/internal/app/constants"
 	"ssl-custom-api/internal/gatepass/query"
 	"ssl-custom-api/internal/utils"
+	"time"
 
+	"golang.org/x/sync/errgroup"
 	"gorm.io/gorm"
 )
-
-var ErrQualityReportNotFound = errors.New("quality report not found")
 
 type Repository interface {
 	GetQualityReport(ctx context.Context, sslNo string) (*QualityReportData, error)
@@ -105,104 +107,141 @@ func NewRepository(db *gorm.DB) Repository {
 //		}
 //		return ""
 //	}
+
 func (r *scrapRepository) GetQualityReport(
 	ctx context.Context,
 	sslNo string,
 ) (*QualityReportData, error) {
-
 	if sslNo == "" {
 		return nil, errors.New("ssl number is required")
 	}
 
 	q := query.Use(r.db)
 
-	var row QualityReportResult
+	var (
+		row     QualityReportResult
+		details []QualityReportDetailResult
 
-	err := q.QualityReport.
-		WithContext(ctx).
-		Select(
-			// Quality report
-			q.QualityReport.SslSno,
-			q.QualityReport.Miti,
-			q.QualityReport.AgentName,
-			q.QualityReport.BillingRate,
-			q.QualityReport.TotalBagsWeight,
+		headerElapsed  time.Duration
+		detailsElapsed time.Duration
+	)
 
-			// Gate entry
-			q.GateEntry.DriverName,
+	totalStart := time.Now()
 
-			// Scrap
-			q.Scrap.BillNo,
-			q.Scrap.BillDate,
-			q.Scrap.VehicleNumber,
-			q.Scrap.MaterialName,
-			q.Scrap.PartyWeight,
-			q.Scrap.SslWeight,
-			q.Scrap.SslFinalWeight,
-			q.Scrap.DifferenceWeight,
+	g, ctx := errgroup.WithContext(ctx)
 
-			// Vendor
-			q.Vendors.VendorName.As("VendorName"),
-			q.Vendors.VendorCode.As("VendorCode"),
-		).
-		Join(
-			q.GateEntry,
-			q.QualityReport.SslSno.EqCol(
-				q.GateEntry.DocumentNo,
-			),
-		).
-		Join(
-			q.Scrap,
-			q.GateEntry.DocumentNo.EqCol(
-				q.Scrap.DocumentNo,
-			),
-		).
-		Join(
-			q.Vendors,
-			q.Scrap.PartyName.EqCol(
-				q.Vendors.VendorName,
-			),
-		).
-		Where(
-			q.QualityReport.SslSno.Eq(sslNo),
-		).
-		Order(
-			q.QualityReport.CreatedAt.Desc(),
-		).
-		Limit(1).
-		Scan(&row)
+	g.Go(func() error {
+		start := time.Now()
 
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, ErrQualityReportNotFound
+		defer func() {
+			headerElapsed = time.Since(start)
+		}()
+
+		err := q.QualityReport.
+			WithContext(ctx).
+			Select(
+				// Quality report
+				q.QualityReport.SslSno,
+				q.QualityReport.Miti,
+				q.QualityReport.AgentName,
+				q.QualityReport.BillingRate,
+				q.QualityReport.TotalBagsWeight,
+
+				// Gate entry
+				q.GateEntry.DriverName,
+
+				// Scrap
+				q.Scrap.BillNo,
+				q.Scrap.BillDate,
+				q.Scrap.VehicleNumber,
+				q.Scrap.MaterialName,
+				q.Scrap.PartyWeight,
+				q.Scrap.SslWeight,
+				q.Scrap.SslFinalWeight,
+				q.Scrap.DifferenceWeight,
+
+				// Vendor
+				q.Vendors.VendorName.As("VendorName"),
+				q.Vendors.VendorCode.As("VendorCode"),
+			).
+			Join(
+				q.GateEntry,
+				q.QualityReport.SslSno.EqCol(
+					q.GateEntry.DocumentNo,
+				),
+			).
+			Join(
+				q.Scrap,
+				q.GateEntry.DocumentNo.EqCol(
+					q.Scrap.DocumentNo,
+				),
+			).
+			Join(
+				q.Vendors,
+				q.Scrap.PartyName.EqCol(
+					q.Vendors.VendorName,
+				),
+			).
+			Where(
+				q.QualityReport.SslSno.Eq(sslNo),
+			).
+			Scan(&row)
+
+		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return constants.ErrQualityReportNotFound
+			}
+
+			return fmt.Errorf("get quality report: %w", err)
 		}
 
-		return nil, fmt.Errorf("get quality report: %w", err)
+		return nil
+	})
+
+	g.Go(func() error {
+		start := time.Now()
+
+		defer func() {
+			detailsElapsed = time.Since(start)
+		}()
+
+		err := q.QualityReportDetails.
+			WithContext(ctx).
+			Select(
+				q.QualityReportDetails.SslSno,
+				q.QualityReportDetails.ScrapType,
+				q.QualityReportDetails.Percentage,
+				q.QualityReportDetails.Qty,
+				q.QualityReportDetails.Rate,
+				q.QualityReportDetails.Amount,
+			).
+			Where(
+				q.QualityReportDetails.SslSno.Eq(sslNo),
+			).
+			Order(
+				q.QualityReportDetails.ID.Asc(),
+			).
+			Scan(&details)
+
+		if err != nil {
+			return fmt.Errorf("get quality report details: %w", err)
+		}
+
+		return nil
+	})
+
+	if err := g.Wait(); err != nil {
+		return nil, err
 	}
 
-	var details []QualityReportDetailResult
-
-	err = q.QualityReportDetails.
-		WithContext(ctx).
-		Select(
-			q.QualityReportDetails.SslSno,
-			q.QualityReportDetails.ScrapType,
-			q.QualityReportDetails.Percentage,
-			q.QualityReportDetails.Qty,
-			q.QualityReportDetails.Rate,
-			q.QualityReportDetails.Amount,
-		).
-		Where(
-			q.QualityReportDetails.SslSno.Eq(sslNo),
-		).
-		Order(
-			q.QualityReportDetails.ID.Asc(),
-		).
-		Scan(&details)
-
-	if err != nil {
-		return nil, fmt.Errorf("get quality report details: %w", err)
-	}
+	totalElapsed := time.Since(totalStart)
+	log.Printf(
+		"GetQualityReport ssl=%s header=%s details=%s total=%s",
+		sslNo,
+		headerElapsed,
+		detailsElapsed,
+		totalElapsed,
+	)
 
 	header := QualityReportHeader{
 		SslSno:           row.SslSno,

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"log"
+	"ssl-custom-api/internal/app/constants"
 
 	"github.com/danielgtaylor/huma/v2"
 )
@@ -25,7 +26,7 @@ func (h *Handler) GetQualityReport(ctx context.Context, input *QualityReportInpu
 
 	response, err := h.service.GetQualityReport(ctx, input.DocumentNo)
 	if err != nil {
-		if errors.Is(err, ErrQualityReportNotFound) {
+		if errors.Is(err, constants.ErrQualityReportNotFound) {
 			return nil, huma.Error404NotFound("No quality report found for the given vendor code and bill number")
 		}
 

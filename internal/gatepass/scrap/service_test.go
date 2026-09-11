@@ -3,6 +3,7 @@ package scrap
 import (
 	"context"
 	"errors"
+	"ssl-custom-api/internal/app/constants"
 	"testing"
 )
 
@@ -94,10 +95,10 @@ func TestGetQualityReportEmptyDetails(t *testing.T) {
 }
 
 func TestGetQualityReportPropagatesNotFound(t *testing.T) {
-	service := NewService(&fakeRepository{err: ErrQualityReportNotFound})
+	service := NewService(&fakeRepository{err: constants.ErrQualityReportNotFound})
 
 	_, err := service.GetQualityReport(context.Background(), "SSL999")
-	if !errors.Is(err, ErrQualityReportNotFound) {
+	if !errors.Is(err, constants.ErrQualityReportNotFound) {
 		t.Fatalf("expected not-found error, got %v", err)
 	}
 }
