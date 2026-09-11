@@ -39,11 +39,12 @@ type Handlers struct {
 }
 
 type AppHandlers struct {
-	Auth   *auth.Handler
-	ApiKey *apikey.Handler
-	Module *modules.Handler
-	Role   *roles.Handler
-	Users  *users.Handler
+	Auth        *auth.Handler
+	ApiKey      *apikey.Handler
+	Module      *modules.Handler
+	Role        *roles.Handler
+	Users       *users.Handler
+	Permissions *permissions.Handler
 }
 
 func New(
@@ -85,10 +86,11 @@ func newAppHandlers(db *gorm.DB, jwt *auth.JWT) *AppHandlers {
 	permissionChecker := permissions.NewDBChecker(db)
 
 	return &AppHandlers{
-		Auth:   auth.New(db, jwt),
-		ApiKey: apikey.New(db, permissionChecker),
-		Module: modules.New(db),
-		Role:   roles.New(db, jwt),
-		Users:  users.New(db),
+		Auth:        auth.New(db, jwt),
+		ApiKey:      apikey.New(db, permissionChecker),
+		Module:      modules.New(db),
+		Role:        roles.New(db, jwt),
+		Users:       users.New(db),
+		Permissions: permissions.New(db, jwt),
 	}
 }
