@@ -1,14 +1,15 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log"
 
 	"gorm.io/gorm"
 
-	"ssl-custom-api/internal/app/auth"
 	"ssl-custom-api/internal/app/models"
+	"ssl-custom-api/internal/app/users"
 	"ssl-custom-api/internal/config"
 	"ssl-custom-api/internal/providers/postgres"
 	"ssl-custom-api/internal/utils"
@@ -62,7 +63,12 @@ func Run(db *gorm.DB, password string) error {
 			RoleID:   role.ID,
 		}
 
-		if err_user := auth.NewUserRepository(tx, nil).CreateUser(&user); err_user != nil {
+		if _, err_user := users.NewUserRepository(tx, nil).CreateUser(context.Background(), &users.CreateUserRequest{
+			Username: user.Username,
+			Password: password,
+			Email:    user.Email,
+			RoleId:   role.ID,
+		}); err_user != nil {
 			return fmt.Errorf("create admin: %w", err_user)
 		}
 
