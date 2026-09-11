@@ -49,4 +49,13 @@ func SetupModulesRoutes(base huma.API, handlers *modules.Handler, jwtSvc *auth.J
 		Security:    security,
 		Errors:      []int{http.StatusBadRequest, http.StatusUnauthorized, http.StatusInternalServerError},
 	}, handlers.GetModuleInfo)
+	huma.Register(modulesBase, huma.Operation{
+		OperationID: "listModules",
+		Method:      http.MethodGet,
+		Path:        "/all",
+		Summary:     "List all modules",
+		Description: "Retrieves a list of all available modules.",
+		Tags:        tags,
+		Security:    security,
+	}, handlers.ListModules)
 }

@@ -20,6 +20,7 @@ type ModuleRepository interface {
 	CreateResource(ctx context.Context, input ResourceCreateRequest) (*models.Resource, error)
 	GetByID(ctx context.Context, id uuid.UUID) (ModuleRow, error)
 	GetByCode(ctx context.Context, code string) (ModuleRow, error)
+	ListModules(ctx context.Context) ([]ModuleRow, error)
 }
 
 func NewModuleRepository(db *gorm.DB) ModuleRepository {
@@ -161,4 +162,15 @@ func (r *moduleRepository) CreateResource(ctx context.Context, input ResourceCre
 		return nil, err
 	}
 	return resource, nil
+}
+
+func (r *moduleRepository) ListModules(ctx context.Context) ([]ModuleRow, error) {
+	q := query.Use(r.db)
+	var modules []ModuleRow
+	err := q.Module.WithContext(ctx).
+		Scan(&modules)
+	if err != nil {
+		return nil, err
+	}
+	return modules, nil
 }

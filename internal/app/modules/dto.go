@@ -53,3 +53,13 @@ type ResourceCreateResponse struct {
 	Code    string `json:"code"`
 	Message string `json:"message"`
 }
+
+type ListModulesRequest struct{}
+
+type ListModulesOutput struct {
+	Body ListModulesResponse `json:"body"`
+}
+
+type ListModulesResponse struct {
+	Modules []ModuleInfoResponse `json:"modules"`
+}

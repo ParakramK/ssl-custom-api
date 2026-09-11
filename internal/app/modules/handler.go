@@ -88,3 +88,19 @@ func (h *Handler) GetModuleInfo(
 		},
 	}, nil
 }
+
+func (h *Handler) ListModules(
+	ctx context.Context,
+	_ *ListModulesRequest,
+) (*ListModulesOutput, error) {
+	modules, err := h.service.ListModules(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return &ListModulesOutput{
+		Body: ListModulesResponse{
+			Modules: modules,
+		},
+	}, nil
+}
