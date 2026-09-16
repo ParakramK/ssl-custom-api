@@ -1,4 +1,4 @@
-h1:DtcOAQd8TrEyVXlzSv2QhHkFkEmEkxaGiu3dEvaWiIA=
+h1:0V+WbWqslurgKEfQIk5MClt+AXs44On5TMt/KsOmQqE=
 20260906152256_init.sql h1:xmtNHw8paJNPrBx6bxfVP3sl8E9ggATeBmPSzQDAkmE=
 20260906165034_create_user_model.sql h1:Ah82qKQGxZBqXXj5QEO+KahE8q8q8kEkiXeujUD4qU4=
 20260906171205_api_key_model.sql h1:371R3WFPhdCxlfoUT8Kx2HojByZCXbzOfBeD/Dj7Cz4=
@@ -6,3 +6,4 @@ h1:DtcOAQd8TrEyVXlzSv2QhHkFkEmEkxaGiu3dEvaWiIA=
 20260908103318_permissions_model.sql h1:ubqIJUg0rOZ8Jwb6EfslxukA/EDwxuGWHqb78h3ns4A=
 20260908111901_permissions_user_module_wide.sql h1:vccLILWFWXoSlAJoP2Ye3dAX6Bf4TUe5BTQS8l7tNUM=
 20260911145137_one_row_per_user_module.sql h1:k58CBIzzzBXwbXyay4o9JVCqciu0rPsOti4huTpexaA=
+20260916101220_module_resource.sql h1:wz5HZeBy5GjBX41A+GTBZEzdZUieoxohfp7bCQfS80k=
