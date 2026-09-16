@@ -104,3 +104,22 @@ func (h *Handler) ListModules(
 		},
 	}, nil
 }
+func (h *Handler) ListResources(
+	ctx context.Context,
+	input *ListResourcesRequest,
+) (*ListResourcesOutput, error) {
+	principal := auth.MustPrincipal(ctx)
+	if !principal.IsAdmin {
+		return nil, huma.Error403Forbidden("admin access required")
+	}
+	resources, err := h.service.ListResources(ctx, *input)
+	if err != nil {
+		return nil, err
+	}
+
+	return &ListResourcesOutput{
+		Body: ListResourcesResponse{
+			Resources: resources,
+		},
+	}, nil
+}

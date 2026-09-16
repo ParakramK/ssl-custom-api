@@ -21,6 +21,7 @@ type ModuleRepository interface {
 	GetByID(ctx context.Context, id uuid.UUID) (ModuleRow, error)
 	GetByCode(ctx context.Context, code string) (ModuleRow, error)
 	ListModules(ctx context.Context) ([]ModuleRow, error)
+	ListResources(ctx context.Context, input ListResourcesRequest) ([]ResourceRow, error)
 }
 
 func NewModuleRepository(db *gorm.DB) ModuleRepository {
@@ -149,7 +150,9 @@ func (r *moduleRepository) CreateResource(ctx context.Context, input ResourceCre
 	if err != nil {
 		return nil, err
 	}
-	_ = existing
+	if existing != nil {
+		return nil, fmt.Errorf("%w: %q", constants.ErrResourceExists, input.Code)
+	}
 
 	resource := &models.Resource{
 		ID:          utils.NewV7ID(),
@@ -173,4 +176,29 @@ func (r *moduleRepository) ListModules(ctx context.Context) ([]ModuleRow, error)
 		return nil, err
 	}
 	return modules, nil
+}
+
+func (r *moduleRepository) ListResources(ctx context.Context, input ListResourcesRequest) ([]ResourceRow, error) {
+	q := query.Use(r.db)
+	var resources []ResourceRow
+	query := q.Resource.WithContext(ctx).
+		Select(
+			q.Resource.ID.As("Id"),
+			q.Resource.Name.As("Name"),
+			q.Resource.Code.As("Code"),
+			q.Resource.Description.As("Description"),
+			q.Module.Name.As("ModuleName"),
+		).
+		Join(
+			q.Module,
+			q.Module.ID.EqCol(q.Resource.ModuleID),
+		)
+	if input.ModuleID != uuid.Nil {
+		query = query.Where(q.Resource.ModuleID.Eq(input.ModuleID))
+	}
+	err := query.Scan(&resources)
+	if err != nil {
+		return nil, err
+	}
+	return resources, nil
 }

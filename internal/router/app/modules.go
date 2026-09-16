@@ -59,3 +59,36 @@ func SetupModulesRoutes(base huma.API, handlers *modules.Handler, jwtSvc *auth.J
 		Security:    security,
 	}, handlers.ListModules)
 }
+
+func SetupModuleResourceRoutes(base huma.API, handlers *modules.Handler, jwtSvc *auth.JWT, resolver middleware.PrincipalResolver) {
+	moduleBase := huma.NewGroup(base, "/modules/resources")
+	moduleBase.UseMiddleware(middleware.JWTAuth(base, jwtSvc, resolver))
+	tags := []string{"app:modules"}
+	openapi := base.OpenAPI()
+	if openapi.Components == nil {
+		openapi.Components = &huma.Components{}
+	}
+	if openapi.Components.SecuritySchemes == nil {
+		openapi.Components.SecuritySchemes = map[string]*huma.SecurityScheme{}
+	}
+	openapi.Components.SecuritySchemes["BearerAuth"] = &huma.SecurityScheme{
+		Type:         "http",
+		Scheme:       "bearer",
+		BearerFormat: "JWT",
+		Description:  "JWT access token from POST /api/v1/app/auth/login",
+	}
+
+	security := []map[string][]string{{"BearerAuth": {}}}
+
+	huma.Register(moduleBase, huma.Operation{
+		OperationID: "createModuleResource",
+		Method:      http.MethodPost,
+		Path:        "",
+		Summary:     "Create a new module resource",
+		Description: "Creates a new module resource with the provided details",
+		Tags:        tags,
+		Security:    security,
+		Errors:      []int{http.StatusBadRequest, http.StatusUnauthorized, http.StatusForbidden, http.StatusInternalServerError},
+	}, handlers.CreateResource)
+
+}

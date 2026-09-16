@@ -46,6 +46,12 @@ func (s *stubModuleService) ListModules(_ context.Context) ([]ModuleInfoResponse
 		{Name: "Module2", Code: "M2"},
 	}, nil
 }
+func (s *stubModuleService) ListResources(_ context.Context, _ ListResourcesRequest) ([]ResourceInfoResponse, error) {
+	return []ResourceInfoResponse{
+		{Name: "Resource1", Code: "R1"},
+		{Name: "Resource2", Code: "R2"},
+	}, nil
+}
 func adminCtx() context.Context {
 	return auth.WithPrincipal(context.Background(), auth.Principal{
 		UserID:  uuid.New(),

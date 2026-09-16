@@ -63,3 +63,23 @@ type ListModulesOutput struct {
 type ListModulesResponse struct {
 	Modules []ModuleInfoResponse `json:"modules"`
 }
+
+type ListResourcesRequest struct {
+	ModuleID uuid.UUID `query:"module_id" doc:"Module ID"`
+}
+
+type ListResourcesOutput struct {
+	Body ListResourcesResponse `json:"body"`
+}
+
+type ListResourcesResponse struct {
+	Resources []ResourceInfoResponse `json:"resources"`
+}
+
+type ResourceInfoResponse struct {
+	ID          uuid.UUID `json:"id"`
+	Code        string    `json:"code"`
+	Name        string    `json:"name"`
+	Description *string   `json:"description,omitempty"`
+	ModuleName  string    `json:"module_name"`
+}

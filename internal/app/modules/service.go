@@ -12,6 +12,7 @@ type ModuleService interface {
 	CreateResource(ctx context.Context, input ResourceCreateRequest) (*ResourceCreateResponse, error)
 	GetModule(ctx context.Context, input *ModuleInfoRequest) (*ModuleInfoResponse, error)
 	ListModules(ctx context.Context) ([]ModuleInfoResponse, error)
+	ListResources(ctx context.Context, input ListResourcesRequest) ([]ResourceInfoResponse, error)
 }
 
 type moduleService struct {
@@ -104,6 +105,25 @@ func (s *moduleService) ListModules(ctx context.Context) ([]ModuleInfoResponse, 
 			Name:        module.Name,
 			Code:        module.Code,
 			Description: module.Description,
+		})
+	}
+
+	return responses, nil
+}
+
+func (s *moduleService) ListResources(ctx context.Context, input ListResourcesRequest) ([]ResourceInfoResponse, error) {
+	resources, err := s.repo.ListResources(ctx, input)
+	if err != nil {
+		return nil, err
+	}
+
+	var responses []ResourceInfoResponse
+	for _, resource := range resources {
+		responses = append(responses, ResourceInfoResponse{
+			ID:          resource.Id,
+			Name:        resource.Name,
+			Code:        resource.Code,
+			Description: resource.Description,
 		})
 	}
 

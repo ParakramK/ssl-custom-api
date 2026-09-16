@@ -8,3 +8,11 @@ type ModuleRow struct {
 	Code        string
 	Description *string
 }
+
+type ResourceRow struct {
+	Id          uuid.UUID
+	Name        string
+	Code        string
+	Description *string
+	ModuleName  string
+}
