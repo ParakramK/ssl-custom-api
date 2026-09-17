@@ -46,17 +46,18 @@ type AgingDetail struct {
 }
 
 type CustomerAgingDetail struct {
-	Status         string         `json:"Status"`
-	CompanyDB      string         `json:"CompanyDB"`
-	CardCode       string         `json:"CardCode"`
-	CardName       string         `json:"CardName"`
-	Balance        float64        `json:"Balance"`
-	TaxNumber      string         `json:"TaxNumber"`
-	SalesEmployee  string         `json:"SalesEmployee"`
-	LastFetched    time.Time      `json:"LastFetched"`
-	Details        []AgingDetail  `json:"details"`
-	AgingSummary   AgingSummary   `json:"aging_summary"`
-	PaymentSummary PaymentSummary `json:"payment_summary"`
-	Total          TotalSummary   `json:"total"`
-	Cached         bool           `json:"cached"`
+	Status            string         `json:"Status"`
+	CompanyDB         string         `json:"CompanyDB"`
+	CardCode          string         `json:"CardCode"`
+	CardName          string         `json:"CardName"`
+	Balance           float64        `json:"Balance"`
+	TaxNumber         string         `json:"TaxNumber"`
+	SalesEmployee     string         `json:"SalesEmployee"`
+	LastFetched       time.Time      `json:"LastFetched"`
+	Details           []AgingDetail  `json:"details"`
+	AgingSummary      AgingSummary   `json:"aging_summary"`
+	PaymentSummary    PaymentSummary `json:"payment_summary"`
+	Total             TotalSummary   `json:"total"`
+	Cached            bool           `json:"cached"`
+	OpenOrdersBalance float64        `json:"OpenOrdersBalance"`
 }

@@ -24,4 +24,5 @@ type AgingRow struct {
 	Z31To60Days       float64
 	Z61To90Days       float64
 	Z91PlusDays       float64
+	OpenOrdersBalance float64
 }

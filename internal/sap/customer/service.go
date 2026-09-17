@@ -53,6 +53,7 @@ func BuildAgingResponse(
 
 	response.CardCode = rows[0].CustomerCode
 	response.CardName = rows[0].CustomerName
+	response.OpenOrdersBalance = rows[0].OpenOrdersBalance
 	response.Balance = utils.Round2(rows[0].Balance)
 	response.TaxNumber = rows[0].TaxNumber
 	response.SalesEmployee = rows[0].SalesEmployee

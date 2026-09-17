@@ -12,6 +12,7 @@ SELECT
     T0."DocDueDate" AS "Due Date",
     T1."PymntGroup" AS "Payment Terms",
     T3."SlpName" AS "Sales Employee",
+    C."OrdersBal" AS "Open Orders Amount",
 
     CASE
         WHEN T0."GroupNum" IN (8,12,10,9,21) THEN 'BG'

@@ -49,6 +49,7 @@ func (r *customerRepository) GetCustomerAging(
 
 			var (
 				balance           driver.Decimal
+				openOrdersBalance driver.Decimal
 				invoiceAmount     driver.Decimal
 				paidAmount        driver.Decimal
 				outstandingAmount driver.Decimal
@@ -71,6 +72,7 @@ func (r *customerRepository) GetCustomerAging(
 				&row.DueDate,
 				&row.PaymentTerms,
 				&row.SalesEmployee,
+				&openOrdersBalance,
 				&row.PaymentTermGroup,
 				&row.OutstandingDays,
 				&invoiceAmount,
@@ -86,6 +88,7 @@ func (r *customerRepository) GetCustomerAging(
 			}
 
 			row.Balance = utils.DecimalToFloat64(balance)
+			row.OpenOrdersBalance = utils.DecimalToFloat64(openOrdersBalance)
 			row.InvoiceAmount = utils.DecimalToFloat64(invoiceAmount)
 			row.PaidAmount = utils.DecimalToFloat64(paidAmount)
 			row.OutstandingAmount = utils.DecimalToFloat64(outstandingAmount)
