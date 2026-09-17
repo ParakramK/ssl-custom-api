@@ -2,18 +2,6 @@
 
 Go REST API over SAP Business One data: customer/sales reporting from SAP HANA, gatepass/weighbridge reporting from MySQL.
 
-## Endpoints
-
-SAP (`/api/v1/sap`):
-
-- `GET /api/v1/sap/customers/aging?CardCode=&CompanyDB=` — accounts receivable aging report
-- `GET /api/v1/sap/sales/top?CompanyDB=&Limit=` — top outstanding customers
-
-Gatepass (`/api/v1/gatepass`):
-
-- `GET /api/v1/gatepass/quality-report?ssl_no=` — scrap quality report with grading details
-- `GET /api/v1/gatepass/tag?tag_no=` — bundle tag data
-- `GET /api/v1/gatepass/packing-list?ssl_no=` — thulokata/sanokata/shook packing lines
 
 ## Setup
 
