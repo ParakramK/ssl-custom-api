@@ -26,10 +26,6 @@ func Setup(handlers *app.Handlers) *fiber.App {
 	v1 := huma.NewGroup(api, "/api/v1")
 	configureOpenAPITags(api)
 
-	setupSwagger(r)
-	setupScalar(r)
-	setupRedoc(r)
-
 	// r.Use("/api/v1/sap", apiKeyAuth(handlers.APIKey))
 	// r.Use("/api/v1/gatepass", apiKeyAuth(handlers.APIKey))
 
@@ -44,6 +40,10 @@ func Setup(handlers *app.Handlers) *fiber.App {
 	appRouter.SetupAppRoutes(v1, handlers)
 
 	setupHealthRoutes(v1)
+
+	setupSwagger(r)
+	setupScalar(r)
+	setupRedoc(r)
 
 	return r
 }
